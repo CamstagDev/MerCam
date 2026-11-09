@@ -1,0 +1,92 @@
+# Al subir una etiqueta vX.Y.Z (ver scripts/nueva-version.mjs), compila el
+# APK de Android y lo publica en una Release de GitHub, con las notas de
+# esa versión sacadas de DEVLOG.md y CHANGELOG.md.
+# También se puede lanzar a mano (workflow_dispatch) con la versión, por
+# ejemplo v0.2.0: se publica desde la rama elegida y la Release crea la
+# etiqueta si no existe.
+name: Publicar versión
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versión a publicar (vX.Y.Z)'
+        required: true
+
+env:
+  ETIQUETA: ${{ inputs.version || github.ref_name }}
+
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm test
+      # Dirección del servidor de búsqueda para la app de Android (secreto
+      # MERCAM_SERVIDOR, p. ej. https://mercam.ejemplo.com).
+      - run: echo "VITE_SERVIDOR=${{ secrets.MERCAM_SERVIDOR }}" > .env.production
+      - run: npm run android:sync
+      # El APK de prueba se firma con la clave de depuración del PC de
+      # Camstag (secreto ANDROID_KEYSTORE_BASE64), para que instale encima
+      # de la app ya instalada sin borrar los datos. Sin el secreto, Gradle
+      # crea una clave nueva.
+      - name: Clave de firma
+        env:
+          CLAVE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$CLAVE" ]; then
+            mkdir -p ~/.android
+            printf '%s' "$CLAVE" | tr -d '\r' | grep -v -- '-----' | base64 -d -i > ~/.android/debug.keystore
+            keytool -list -keystore ~/.android/debug.keystore -storepass android | grep -i 'SHA'
+          fi
+      - run: chmod +x gradlew && ./gradlew assembleDebug
+        working-directory: android
+      - run: mv android/app/build/outputs/apk/debug/app-debug.apk "MerCam-${ETIQUETA}.apk"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android
+          path: MerCam-*.apk
+
+  publicar:
+    needs: [android]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          path: archivos
+          merge-multiple: true
+      - name: Notas de la versión
+        run: |
+          version="${ETIQUETA#v}"
+          seccion() { awk -v v="## $version " 'index($0, v) == 1 { dentro = 1; next } /^## / { dentro = 0 } dentro' "$1"; }
+          devlog="$(seccion DEVLOG.md)"
+          {
+            if [ -n "$devlog" ]; then
+              echo "$devlog"
+              echo
+              echo "## Cambios"
+            fi
+            seccion CHANGELOG.md
+          } > notas.md
+          cat notas.md
+      - uses: softprops/action-gh-release@v3
+        with:
+          name: MerCam ${{ env.ETIQUETA }}
+          tag_name: ${{ env.ETIQUETA }}
+          target_commitish: ${{ github.sha }}
+          body_path: notas.md
+          files: archivos/*

@@ -1,0 +1,8 @@
+{
+  "appId": "com.camstagdev.mercam",
+  "appName": "MerCam",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#0d0e13"
+  }
+}

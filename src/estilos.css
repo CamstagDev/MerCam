@@ -1,0 +1,116 @@
+/* MerCam: mismo tema oscuro que las otras apps (ver SudoCam tokens.css). */
+
+:root {
+  color-scheme: dark;
+  --bg: #0d0e13;
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-strong: rgba(255, 255, 255, 0.07);
+  --border: rgba(255, 255, 255, 0.09);
+  --text: #f1f2f6;
+  --text-muted: #94959f;
+  --accent: #4fd18a;
+  --accent-contrast: #0b1a12;
+  --marca: #f5a623;
+  --radio: 12px;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+}
+
+#barra {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  z-index: 1;
+}
+#barra h1 { flex: 1; margin: 0; font-size: 1.15rem; }
+#barra .version { color: var(--text-muted); }
+.logo, .volver {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+#app { max-width: 720px; margin: 0 auto; padding: 16px; }
+
+h2 { font-size: 1rem; margin: 24px 0 8px; }
+h3 { margin: 0 0 8px; font-size: 1rem; }
+small, .ayuda, .vacio { color: var(--text-muted); }
+a { color: var(--accent); }
+
+.grilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.tarjeta, .boton {
+  display: block;
+  padding: 12px 14px;
+  border-radius: var(--radio);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+}
+.boton { display: inline-block; margin-top: 8px; background: var(--accent); color: var(--accent-contrast); font-weight: 600; }
+
+button {
+  font: inherit;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 600;
+  cursor: pointer;
+}
+button.secundario { background: var(--surface-strong); color: var(--text); border-color: var(--border); }
+button.enlace { background: none; color: var(--accent); padding: 4px 0; }
+
+.formulario { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.formulario input {
+  flex: 1 1 140px;
+  min-width: 0;
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+.formulario input[type='number'] { flex: 0 1 90px; }
+
+.filas { list-style: none; padding: 0; margin: 0; }
+.filas li, .oferta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.producto {
+  padding: 12px;
+  margin: 12px 0;
+  border-radius: var(--radio);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.oferta.de-la-marca strong { color: var(--marca); }
+.oferta.elegida { background: rgba(79, 209, 138, 0.1); border-radius: 8px; padding-inline: 8px; }
+s { color: var(--text-muted); }
