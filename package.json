@@ -21,6 +21,8 @@
   "dependencies": {
     "@capacitor/android": "^8.5.3",
     "@capacitor/core": "^8.5.3",
+    "@capacitor/geolocation": "^8.2.4",
+    "@capgo/nativegeocoder": "^8.0.31",
     "express": "^5.1.0"
   },
   "devDependencies": {

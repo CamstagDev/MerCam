@@ -18,3 +18,6 @@ la versión nueva (ver scripts/nueva-version.mjs).
 - Cada cadena tiene su archivo en servidor/cadenas/ para editarla,
   exportarla o importarla sin tocar código.
 - Las direcciones se buscan solo en Colombia.
+- Sitios con ubicación exacta: "Usar mi ubicación" (GPS) al crear un
+  sitio, "Estoy aquí" para corregir uno, y en Android la dirección se
+  busca con el buscador del propio teléfono (sin claves de Google).

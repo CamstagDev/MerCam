@@ -28,6 +28,12 @@ export interface Sitio extends Coordenadas {
   radioM: number;
   /** Cuándo se mapeó por última vez (ISO), o null si nunca. */
   mapeado: string | null;
+  /**
+   * De dónde salieron lat/lon: el GPS o el buscador del teléfono (exactos,
+   * se reusan) o el servidor con OpenStreetMap (aproximado, se vuelve a
+   * buscar la dirección al mapear de nuevo).
+   */
+  fuente?: 'gps' | 'telefono' | 'servidor';
 }
 
 /** Si la tienda vende online y con qué adaptador se la busca. */
@@ -96,6 +102,11 @@ export interface Eleccion {
 export interface PedidoMapeo {
   direccion: string;
   radioM: number;
+  /**
+   * Si la app ya sabe dónde es (GPS o el buscador de direcciones del
+   * teléfono), el servidor no busca la dirección en OpenStreetMap.
+   */
+  coordenadas?: Coordenadas;
 }
 
 export interface RespuestaMapeo {

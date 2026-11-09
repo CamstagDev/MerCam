@@ -8,7 +8,9 @@ con sus precios.
 
 ## Cómo funciona
 
-1. **Sitios.** Creas un sitio con una dirección ("Casa"). MerCam busca
+1. **Sitios.** Creas un sitio con una dirección ("Casa") o con tu
+   ubicación (GPS). En Android la dirección la ubica el propio teléfono;
+   en el navegador, OpenStreetMap (menos preciso). MerCam busca
    los supermercados cercanos (OpenStreetMap) y revisa cuáles venden
    online. Esto se hace pocas veces: es "mapear" la zona.
 2. **Tiendas manuales.** En un sitio puedes agregar tiendas a mano

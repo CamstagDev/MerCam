@@ -48,13 +48,16 @@ app.get('/api/cadenas', (_req, res) => {
 });
 
 app.post('/api/mapear', async (req, res) => {
-  const { direccion, radioM } = req.body as Partial<PedidoMapeo>;
-  if (!direccion || typeof direccion !== 'string') {
+  const { direccion, radioM, coordenadas: dadas } = req.body as Partial<PedidoMapeo>;
+  const sonValidas = typeof dadas?.lat === 'number' && typeof dadas.lon === 'number' && Math.abs(dadas.lat) <= 90 && Math.abs(dadas.lon) <= 180;
+  if (!sonValidas && (!direccion || typeof direccion !== 'string')) {
     res.status(400).json({ error: 'Falta la dirección' });
     return;
   }
   try {
-    const { coordenadas, direccionEncontrada } = await geocodificar(direccion);
+    const { coordenadas, direccionEncontrada } = sonValidas
+      ? { coordenadas: { lat: dadas!.lat, lon: dadas!.lon }, direccionEncontrada: direccion ?? '' }
+      : await geocodificar(direccion!);
     const radio = Math.min(Number(radioM) || 2000, 10000);
     let encontradas = await buscarSupermercados(coordenadas, radio);
     const tiendas: RespuestaMapeo['tiendas'] = [];
