@@ -10,20 +10,38 @@ import { BUSCADORES } from '../buscadores/registro.ts';
 import type { TiendaMapeada } from './supermercados.ts';
 
 /**
- * Cadenas cuyo sitio y buscador ya conocemos, por nombre normalizado.
- * Se completa a medida que se agregan cadenas de la zona.
+ * Cadenas cuyo sitio y buscador ya conocemos. El patrón se busca como
+ * palabra en el nombre o la marca normalizados ("Éxito Express La 14"
+ * -> "exito express la 14"). Probadas en Cali (Colombia) el 2026-11-09.
+ * Sin tienda online con precios: Súper Inter, Ara, Surtimax, Makro;
+ * Mercamio tiene una app propia (pendiente).
  */
-export const CADENAS_CONOCIDAS: Record<string, TiendaOnline> = {};
+export const CADENAS_CONOCIDAS: { patron: RegExp; online: TiendaOnline }[] = [
+  { patron: /\bexito\b/, online: { url: 'https://www.exito.com', adaptador: 'vtex' } },
+  { patron: /\bcarulla\b/, online: { url: 'https://www.carulla.com', adaptador: 'vtex' } },
+  { patron: /\bolimpica\b/, online: { url: 'https://www.olimpica.com', adaptador: 'vtex' } },
+  // Jumbo y Metro (Cencosud) comparten tienda online.
+  { patron: /\b(jumbo|metro)\b/, online: { url: 'https://www.jumbocolombia.com', adaptador: 'vtex' } },
+  { patron: /\b(tiendas )?d1\b/, online: { url: 'https://www.d1.com.co', adaptador: 'vtex' } },
+];
 
-function clave(nombre: string): string {
+export function normalizarNombre(nombre: string): string {
   return nombre.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 }
 
-export async function detectarTiendaOnline(tienda: TiendaMapeada): Promise<TiendaOnline | null> {
-  for (const nombre of [tienda.cadena, tienda.nombre]) {
-    const conocida = nombre ? CADENAS_CONOCIDAS[clave(nombre)] : undefined;
-    if (conocida) return conocida;
+export function cadenaConocida(...nombres: (string | undefined)[]): TiendaOnline | undefined {
+  for (const nombre of nombres) {
+    if (!nombre) continue;
+    const limpio = normalizarNombre(nombre);
+    const cadena = CADENAS_CONOCIDAS.find((c) => c.patron.test(limpio));
+    if (cadena) return cadena.online;
   }
+  return undefined;
+}
+
+export async function detectarTiendaOnline(tienda: TiendaMapeada): Promise<TiendaOnline | null> {
+  const conocida = cadenaConocida(tienda.cadena, tienda.nombre);
+  if (conocida) return conocida;
   if (!tienda.sitioWeb) return null;
   let origen: string;
   try {

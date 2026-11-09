@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { leerProductosVtex } from '../servidor/buscadores/vtex.ts';
 import { textosABuscar } from '../servidor/busqueda.ts';
 import { consultaOverpass, leerElementos } from '../servidor/mapeo/supermercados.ts';
+import { cadenaConocida } from '../servidor/mapeo/tiendaOnline.ts';
 
 describe('VTEX', () => {
   it('toma el precio más bajo disponible y omite los sin stock', () => {
@@ -20,6 +21,16 @@ describe('VTEX', () => {
     expect(resultados).toEqual([
       { titulo: 'Leche Entera 1 L', marca: 'Colun', precio: 1100, precioLista: undefined, url: 'https://tienda.test/leche/p' },
     ]);
+  });
+});
+
+describe('cadenas de Cali', () => {
+  it('reconoce las cadenas por nombre o marca', () => {
+    expect(cadenaConocida(undefined, 'Éxito Express Ciudad Jardín')?.url).toBe('https://www.exito.com');
+    expect(cadenaConocida('Olímpica')?.url).toBe('https://www.olimpica.com');
+    expect(cadenaConocida('Tiendas D1')?.url).toBe('https://www.d1.com.co');
+    expect(cadenaConocida('Metro')?.url).toBe('https://www.jumbocolombia.com');
+    expect(cadenaConocida('Súper Inter', 'Metropolitana')).toBeUndefined();
   });
 });
 

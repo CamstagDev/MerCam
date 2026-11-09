@@ -28,7 +28,7 @@ export type TiendaMapeada = Omit<Tienda, 'id' | 'sitioId'> & { sitioWeb?: string
 
 export function consultaOverpass({ lat, lon }: Coordenadas, radioM: number): string {
   const filtro = `["shop"~"^(${TIPOS.join('|')})$"](around:${Math.round(radioM)},${lat},${lon})`;
-  return `[out:json][timeout:25];(node${filtro};way${filtro};);out center tags;`;
+  return `[out:json][timeout:60];(node${filtro};way${filtro};);out center tags;`;
 }
 
 /** Convierte la respuesta de Overpass en tiendas (sin decidir aún si venden online). */
@@ -62,7 +62,7 @@ export async function buscarSupermercados(centro: Coordenadas, radioM: number): 
       const { elements } = await pedirJson<{ elements: ElementoOsm[] }>(
         servidor,
         { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: cuerpo },
-        30000,
+        90000, // Overpass a veces tarda más de 30 s en responder
       );
       return leerElementos(elements);
     } catch (error) {

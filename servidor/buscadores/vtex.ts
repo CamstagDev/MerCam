@@ -53,6 +53,12 @@ export const buscadorVtex: Buscador = {
 
   async buscar(origen, texto) {
     const url = `${origen}${RUTA}?ft=${encodeURIComponent(texto)}&_from=0&_to=${MAXIMO - 1}`;
-    return leerProductosVtex(await pedirJson<ProductoVtex[]>(url));
+    // Algunas tiendas (Éxito) a veces responden 500 y al reintentar andan.
+    try {
+      return leerProductosVtex(await pedirJson<ProductoVtex[]>(url));
+    } catch {
+      await new Promise((listo) => setTimeout(listo, 800));
+      return leerProductosVtex(await pedirJson<ProductoVtex[]>(url));
+    }
   },
 };

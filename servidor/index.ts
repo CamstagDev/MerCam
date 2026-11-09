@@ -48,10 +48,9 @@ app.post('/api/mapear', async (req, res) => {
   try {
     const { coordenadas, direccionEncontrada } = await geocodificar(direccion);
     const encontradas = await buscarSupermercados(coordenadas, Math.min(Number(radioM) || 2000, 10000));
-    const tiendas: RespuestaMapeo['tiendas'] = [];
-    for (const { sitioWeb, ...tienda } of encontradas) {
-      tiendas.push({ ...tienda, online: await detectarTiendaOnline({ ...tienda, sitioWeb }) });
-    }
+    const tiendas: RespuestaMapeo['tiendas'] = await Promise.all(
+      encontradas.map(async ({ sitioWeb, ...tienda }) => ({ ...tienda, online: await detectarTiendaOnline({ ...tienda, sitioWeb }) })),
+    );
     const respuesta: RespuestaMapeo = { coordenadas, direccionEncontrada, tiendas };
     res.json(respuesta);
   } catch (error) {
