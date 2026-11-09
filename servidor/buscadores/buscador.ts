@@ -3,6 +3,9 @@
 // buscador sirve para varias. Para sumar una plataforma o una cadena con
 // sitio propio: un archivo nuevo en esta carpeta y una línea en registro.ts.
 
+import type { Coordenadas, TiendaOnline } from '../../compartido/tipos.ts';
+import type { TiendaMapeada } from '../mapeo/supermercados.ts';
+
 export interface ResultadoBuscador {
   titulo: string;
   marca?: string;
@@ -16,5 +19,13 @@ export interface Buscador {
   /** true si el sitio (su origen, p. ej. https://www.tienda.com) usa esta plataforma. */
   reconoce(origen: string): Promise<boolean>;
   /** Busca un texto en la tienda. Los precios ya incluyen los descuentos del día. */
-  buscar(origen: string, texto: string): Promise<ResultadoBuscador[]>;
+  buscar(online: TiendaOnline, texto: string): Promise<ResultadoBuscador[]>;
+  /**
+   * Para cadenas con precio distinto en cada sede y su propia lista de
+   * sedes (Mercamio): las que quedan dentro del radio, ya con `online`.
+   * Al mapear reemplazan a las de OpenStreetMap de esa cadena.
+   */
+  sedesCerca?(centro: Coordenadas, radioM: number): Promise<TiendaMapeada[]>;
+  /** Patrón del nombre en OpenStreetMap de las tiendas que `sedesCerca` reemplaza. */
+  patronCadena?: RegExp;
 }

@@ -16,7 +16,8 @@ import type { PedidoBusqueda, PedidoMapeo, RespuestaMapeo } from '../compartido/
 import { buscarLista } from './busqueda.ts';
 import { geocodificar } from './mapeo/geocodificar.ts';
 import { buscarSupermercados } from './mapeo/supermercados.ts';
-import { detectarTiendaOnline } from './mapeo/tiendaOnline.ts';
+import { detectarTiendaOnline, normalizarNombre } from './mapeo/tiendaOnline.ts';
+import { BUSCADORES } from './buscadores/registro.ts';
 
 const PUERTO = Number(process.env.PORT ?? 3010); // 3003 es SudoCam
 
@@ -47,9 +48,28 @@ app.post('/api/mapear', async (req, res) => {
   }
   try {
     const { coordenadas, direccionEncontrada } = await geocodificar(direccion);
-    const encontradas = await buscarSupermercados(coordenadas, Math.min(Number(radioM) || 2000, 10000));
-    const tiendas: RespuestaMapeo['tiendas'] = await Promise.all(
-      encontradas.map(async ({ sitioWeb, ...tienda }) => ({ ...tienda, online: await detectarTiendaOnline({ ...tienda, sitioWeb }) })),
+    const radio = Math.min(Number(radioM) || 2000, 10000);
+    let encontradas = await buscarSupermercados(coordenadas, radio);
+    const tiendas: RespuestaMapeo['tiendas'] = [];
+
+    // Cadenas con su propia lista de sedes (Mercamio): se usan sus sedes
+    // en vez de las que trae OpenStreetMap.
+    for (const buscador of BUSCADORES) {
+      if (!buscador.sedesCerca || !buscador.patronCadena) continue;
+      try {
+        const sedes = await buscador.sedesCerca(coordenadas, radio);
+        const patron = buscador.patronCadena;
+        encontradas = encontradas.filter((t) => ![t.nombre, t.cadena].some((n) => n && patron.test(normalizarNombre(n))));
+        tiendas.push(...sedes);
+      } catch (error) {
+        console.error(`No se pudieron leer las sedes de ${buscador.id}:`, error);
+      }
+    }
+
+    tiendas.push(
+      ...(await Promise.all(
+        encontradas.map(async ({ sitioWeb, ...tienda }) => ({ ...tienda, online: await detectarTiendaOnline({ ...tienda, sitioWeb }) })),
+      )),
     );
     const respuesta: RespuestaMapeo = { coordenadas, direccionEncontrada, tiendas };
     res.json(respuesta);

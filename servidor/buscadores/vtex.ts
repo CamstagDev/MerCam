@@ -51,7 +51,7 @@ export const buscadorVtex: Buscador = {
     return Array.isArray(respuesta);
   },
 
-  async buscar(origen, texto) {
+  async buscar({ url: origen }, texto) {
     const url = `${origen}${RUTA}?ft=${encodeURIComponent(texto)}&_from=0&_to=${MAXIMO - 1}`;
     // Algunas tiendas (Éxito) a veces responden 500 y al reintentar andan.
     try {

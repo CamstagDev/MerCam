@@ -13,3 +13,5 @@ la versión nueva (ver scripts/nueva-version.mjs).
 - Servidor de búsqueda: mapeo con OpenStreetMap y precios de tiendas VTEX.
 - Cali: Éxito, Carulla, Olímpica, Jumbo/Metro y D1 se reconocen al mapear
   y se buscan sus precios online.
+- Mercamio: al mapear un sitio se suman sus sedes cercanas, cada una con
+  sus propios precios.

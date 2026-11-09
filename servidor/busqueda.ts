@@ -41,7 +41,7 @@ export async function buscarLista(pedido: PedidoBusqueda): Promise<RespuestaBusq
       const porProducto = await Promise.all(
         pedido.productos.map(async (producto) => {
           const textos = textosABuscar(producto.nombre, producto.marca);
-          const listas = await Promise.all(textos.map((t) => buscador.buscar(online.url, t)));
+          const listas = await Promise.all(textos.map((t) => buscador.buscar(online, t)));
           return sinRepetir(listas.flat()).map(
             (r): Oferta => ({
               tiendaId: tienda.id,

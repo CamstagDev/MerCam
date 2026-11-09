@@ -35,6 +35,8 @@ export interface TiendaOnline {
   url: string;
   /** Id de un adaptador de servidor/buscadores (p. ej. 'vtex'). */
   adaptador: string;
+  /** Para cadenas con precio por sede (Mercamio): el id de esta sede. */
+  sede?: string;
 }
 
 export interface Tienda {

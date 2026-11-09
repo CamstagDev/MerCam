@@ -73,7 +73,7 @@ herramientas de línea de comandos del SDK de Android, con las variables
 | `src/logica/comparar.ts` | Orden de ofertas (marca primero, más baratas), "Ver más" y la minilista |
 | `src/datos/` | `almacen.ts` (localStorage) y `servidor.ts` (llamadas al servidor) |
 | `servidor/mapeo/` | Dirección → coordenadas (Nominatim), supermercados cercanos (Overpass) y si venden online |
-| `servidor/buscadores/` | Un buscador por plataforma de tienda online. Hoy: VTEX |
+| `servidor/buscadores/` | Un buscador por plataforma de tienda online. Hoy: VTEX (Éxito, Carulla, Olímpica, Jumbo/Metro, D1) y Mercamio (precio por sede) |
 | `servidor/busqueda.ts` | Busca una lista en varias tiendas |
 | `tests/` | Pruebas de Vitest |
 
