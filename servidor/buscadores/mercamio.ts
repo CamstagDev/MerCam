@@ -4,13 +4,20 @@
 
 import type { Coordenadas } from '../../compartido/tipos.ts';
 import type { TiendaMapeada } from '../mapeo/supermercados.ts';
+import { cadenaPorId } from '../cadenas/cadenas.ts';
 import { pedirJson } from '../red.ts';
 import type { Buscador, ResultadoBuscador } from './buscador.ts';
 
-const SERVICIO = 'https://wacoecommerce-js4zy.ondigitalocean.app/api/v1';
-const PAGINA = 'https://mercamio.com';
-const CABECERAS = { 'at-business': 'mercamio' };
 const MAXIMO = 30;
+
+/** Datos de servidor/cadenas/mercamio.json (se leen al usarse, por si se edita el archivo). */
+function datosCadena() {
+  const cadena = cadenaPorId('mercamio');
+  const servicio = cadena?.config?.servicio;
+  const negocio = cadena?.config?.negocio;
+  if (!cadena?.tiendaOnline || !servicio || !negocio) throw new Error('mercamio.json no tiene tiendaOnline o config.servicio/negocio');
+  return { pagina: cadena.tiendaOnline.url, servicio, cabeceras: { 'at-business': negocio } };
+}
 
 export interface SedeMercamio {
   id: string;
@@ -38,7 +45,7 @@ export function distanciaM(a: Coordenadas, b: Coordenadas): number {
   return 2 * 6371000 * Math.asin(Math.sqrt(h));
 }
 
-export function leerSedes(sedes: SedeMercamio[], centro: Coordenadas, radioM: number): TiendaMapeada[] {
+export function leerSedes(sedes: SedeMercamio[], centro: Coordenadas, radioM: number, pagina: string): TiendaMapeada[] {
   const cerca: TiendaMapeada[] = [];
   for (const sede of sedes) {
     const [lat, lon] = sede.geopoint?.coordinates ?? [];
@@ -51,14 +58,14 @@ export function leerSedes(sedes: SedeMercamio[], centro: Coordenadas, radioM: nu
       coordenadas: { lat, lon },
       origen: 'mapeada',
       osmId: `mercamio/${sede.id}`,
-      online: { url: PAGINA, adaptador: 'mercamio', sede: sede.id },
+      online: { url: pagina, adaptador: 'mercamio', sede: sede.id },
     });
   }
   return cerca;
 }
 
 /** El precio de cada producto en una sede; los que no están o no tienen stock ahí se omiten. */
-export function leerProductosMercamio(productos: ProductoMercamio[], sede: string): ResultadoBuscador[] {
+export function leerProductosMercamio(productos: ProductoMercamio[], sede: string, pagina: string): ResultadoBuscador[] {
   const resultados: ResultadoBuscador[] = [];
   for (const producto of productos) {
     const enSede = producto.stock_branch_offices?.find((s) => s.id === sede);
@@ -72,7 +79,7 @@ export function leerProductosMercamio(productos: ProductoMercamio[], sede: strin
       marca: producto.brand,
       precio,
       precioLista: lista > precio ? lista : undefined,
-      url: `${PAGINA}/product/${encodeURIComponent(producto.id)}`,
+      url: `${pagina}/product/${encodeURIComponent(producto.id)}`,
     });
   }
   return resultados;
@@ -80,24 +87,26 @@ export function leerProductosMercamio(productos: ProductoMercamio[], sede: strin
 
 export const buscadorMercamio: Buscador = {
   id: 'mercamio',
-  patronCadena: /\bmercamio\b/,
+  cadenaId: 'mercamio',
 
   async reconoce(origen) {
     return /(^|\.)mercamio\.com$/.test(new URL(origen).hostname);
   },
 
   async sedesCerca(centro, radioM) {
-    const { data } = await pedirJson<{ data: SedeMercamio[] }>(`${SERVICIO}/offices`, { headers: CABECERAS });
-    return leerSedes(data, centro, radioM);
+    const { pagina, servicio, cabeceras } = datosCadena();
+    const { data } = await pedirJson<{ data: SedeMercamio[] }>(`${servicio}/offices`, { headers: cabeceras });
+    return leerSedes(data, centro, radioM, pagina);
   },
 
   async buscar({ sede }, texto) {
     if (!sede) throw new Error('Falta la sede de Mercamio; vuelve a mapear el sitio');
-    const url = new URL(`${SERVICIO}/search/products`);
+    const { pagina, servicio, cabeceras } = datosCadena();
+    const url = new URL(`${servicio}/search/products`);
     url.searchParams.set('query', texto);
     url.searchParams.set('page', '0');
     url.searchParams.set('limit', String(MAXIMO));
-    const { data } = await pedirJson<{ data: { products: ProductoMercamio[] } }>(url.toString(), { headers: CABECERAS });
-    return leerProductosMercamio(data.products ?? [], sede);
+    const { data } = await pedirJson<{ data: { products: ProductoMercamio[] } }>(url.toString(), { headers: cabeceras });
+    return leerProductosMercamio(data.products ?? [], sede, pagina);
   },
 };

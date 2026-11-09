@@ -1,0 +1,8 @@
+{
+  "id": "jumbo",
+  "nombre": "Jumbo / Metro",
+  "pais": "CO",
+  "alias": ["jumbo", "metro"],
+  "tiendaOnline": { "url": "https://www.jumbocolombia.com", "adaptador": "vtex" },
+  "notas": "VTEX (Cencosud). Jumbo y Metro comparten tienda online; tiendasjumbo.co y tiendasmetro.co redirigen acá."
+}

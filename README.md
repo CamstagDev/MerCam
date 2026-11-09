@@ -72,15 +72,25 @@ herramientas de línea de comandos del SDK de Android, con las variables
 | `src/pantallas/` | Inicio, lista, sitios, tienda, comparar, minilista |
 | `src/logica/comparar.ts` | Orden de ofertas (marca primero, más baratas), "Ver más" y la minilista |
 | `src/datos/` | `almacen.ts` (localStorage) y `servidor.ts` (llamadas al servidor) |
+| `servidor/cadenas/` | Un archivo JSON por cadena de supermercados |
 | `servidor/mapeo/` | Dirección → coordenadas (Nominatim), supermercados cercanos (Overpass) y si venden online |
 | `servidor/buscadores/` | Un buscador por plataforma de tienda online. Hoy: VTEX (Éxito, Carulla, Olímpica, Jumbo/Metro, D1) y Mercamio (precio por sede) |
 | `servidor/busqueda.ts` | Busca una lista en varias tiendas |
 | `tests/` | Pruebas de Vitest |
 
-### Sumar una tienda online
+### Cadenas de supermercados
 
-Si la cadena usa una plataforma que ya tiene buscador (VTEX), se detecta
-sola al mapear si OpenStreetMap trae su sitio web; si no, agrégala a
-`CADENAS_CONOCIDAS` en `servidor/mapeo/tiendaOnline.ts`. Para una
-plataforma nueva, crea un buscador en `servidor/buscadores/` (ver
-`buscador.ts`) y súmalo en `registro.ts`.
+Cada cadena tiene su archivo en `servidor/cadenas/` (`exito.json`,
+`mercamio.json`...): nombre, palabras con las que se reconocen sus
+tiendas en OpenStreetMap (`alias`), su tienda online (`url` y qué
+buscador usar) o `null` si se sabe que no vende online, y notas. Para
+sumar, cambiar, exportar o importar una cadena basta con copiar o editar
+su archivo y reiniciar el servidor; el formato está explicado en
+`servidor/cadenas/cadenas.ts`. `GET /api/cadenas` muestra las cargadas.
+
+Si la cadena no tiene archivo pero usa VTEX y OpenStreetMap trae su
+sitio web, se detecta sola al mapear. Para una plataforma nueva, crea un
+buscador en `servidor/buscadores/` (ver `buscador.ts`) y súmalo en
+`registro.ts`.
+
+Las direcciones se buscan solo en Colombia (`MERCAM_PAIS=co`).

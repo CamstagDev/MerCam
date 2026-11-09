@@ -1,0 +1,12 @@
+{
+  "id": "mercamio",
+  "nombre": "Mercamio",
+  "pais": "CO",
+  "alias": ["mercamio", "mercatodo"],
+  "tiendaOnline": { "url": "https://mercamio.com", "adaptador": "mercamio" },
+  "config": {
+    "servicio": "https://wacoecommerce-js4zy.ondigitalocean.app/api/v1",
+    "negocio": "mercamio"
+  },
+  "notas": "Precio distinto por sede: al mapear se usan sus sedes (GET {servicio}/offices) en vez de las de OpenStreetMap, y cada sede se busca aparte. Sedes en Cali, Bogotá y Chía."
+}

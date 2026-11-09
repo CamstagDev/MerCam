@@ -1,0 +1,8 @@
+{
+  "id": "carulla",
+  "nombre": "Carulla",
+  "pais": "CO",
+  "alias": ["carulla"],
+  "tiendaOnline": { "url": "https://www.carulla.com", "adaptador": "vtex" },
+  "notas": "VTEX (Grupo Éxito)."
+}

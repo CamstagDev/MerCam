@@ -1,0 +1,8 @@
+{
+  "id": "d1",
+  "nombre": "Tiendas D1",
+  "pais": "CO",
+  "alias": ["d1", "tiendas d1"],
+  "tiendaOnline": { "url": "https://www.d1.com.co", "adaptador": "vtex" },
+  "notas": "VTEX."
+}

@@ -1,0 +1,8 @@
+{
+  "id": "pepeganga",
+  "nombre": "Pepe Ganga",
+  "pais": "CO",
+  "alias": ["pepe ganga", "pepeganga"],
+  "tiendaOnline": { "url": "https://www.pepeganga.com", "adaptador": "vtex" },
+  "notas": "VTEX. Más hogar que mercado."
+}

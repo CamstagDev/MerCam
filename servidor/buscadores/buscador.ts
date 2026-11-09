@@ -26,6 +26,6 @@ export interface Buscador {
    * Al mapear reemplazan a las de OpenStreetMap de esa cadena.
    */
   sedesCerca?(centro: Coordenadas, radioM: number): Promise<TiendaMapeada[]>;
-  /** Patrón del nombre en OpenStreetMap de las tiendas que `sedesCerca` reemplaza. */
-  patronCadena?: RegExp;
+  /** Id del archivo de servidor/cadenas cuyas tiendas de OpenStreetMap reemplaza `sedesCerca`. */
+  cadenaId?: string;
 }

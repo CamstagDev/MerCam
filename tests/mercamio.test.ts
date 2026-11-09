@@ -13,6 +13,7 @@ describe('Mercamio', () => {
       ],
       { lat: 3.41, lon: -76.545 },
       2000,
+      'https://mercamio.com',
     );
     expect(sedes.map((s) => s.nombre)).toEqual(['Mercamio Calle 5']);
     expect(sedes[0]?.online).toEqual({ url: 'https://mercamio.com', adaptador: 'mercamio', sede: 'a' });
@@ -34,6 +35,7 @@ describe('Mercamio', () => {
         { id: 'p3', title: 'Solo en otra sede', stock_branch_offices: [{ id: 'b', price: 5000, stock: 3 }] },
       ],
       'a',
+      'https://mercamio.com',
     );
     expect(resultados).toEqual([
       { titulo: 'Papel Higienico Elite x12', marca: 'ELITE', precio: 11950, precioLista: 14590, url: 'https://mercamio.com/product/p1' },

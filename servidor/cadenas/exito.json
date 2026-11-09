@@ -1,0 +1,8 @@
+{
+  "id": "exito",
+  "nombre": "Éxito",
+  "pais": "CO",
+  "alias": ["exito"],
+  "tiendaOnline": { "url": "https://www.exito.com", "adaptador": "vtex" },
+  "notas": "VTEX. A veces responde 500; el buscador reintenta una vez. Incluye Éxito Express."
+}

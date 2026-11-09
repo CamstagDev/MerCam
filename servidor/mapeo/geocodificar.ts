@@ -5,6 +5,8 @@
 import type { Coordenadas } from '../../compartido/tipos.ts';
 import { pedirJson } from '../red.ts';
 
+const PAISES = process.env.MERCAM_PAIS ?? 'co';
+
 interface ResultadoNominatim {
   lat: string;
   lon: string;
@@ -16,6 +18,8 @@ export async function geocodificar(direccion: string): Promise<{ coordenadas: Co
   url.searchParams.set('q', direccion);
   url.searchParams.set('format', 'jsonv2');
   url.searchParams.set('limit', '1');
+  // Solo direcciones de Colombia por ahora (MERCAM_PAIS=co,ec para sumar países).
+  url.searchParams.set('countrycodes', PAISES);
   const [primero] = await pedirJson<ResultadoNominatim[]>(url.toString());
   if (!primero) throw new Error(`No se encontró la dirección "${direccion}"`);
   return {

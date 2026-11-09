@@ -1,0 +1,8 @@
+{
+  "id": "olimpica",
+  "nombre": "Olímpica",
+  "pais": "CO",
+  "alias": ["olimpica", "sao"],
+  "tiendaOnline": { "url": "https://www.olimpica.com", "adaptador": "vtex" },
+  "notas": "VTEX. Incluye Supertiendas Olímpica y SAO."
+}

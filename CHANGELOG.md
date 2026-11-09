@@ -15,3 +15,6 @@ la versión nueva (ver scripts/nueva-version.mjs).
   y se buscan sus precios online.
 - Mercamio: al mapear un sitio se suman sus sedes cercanas, cada una con
   sus propios precios.
+- Cada cadena tiene su archivo en servidor/cadenas/ para editarla,
+  exportarla o importarla sin tocar código.
+- Las direcciones se buscan solo en Colombia.

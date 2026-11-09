@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { leerProductosVtex } from '../servidor/buscadores/vtex.ts';
 import { textosABuscar } from '../servidor/busqueda.ts';
 import { consultaOverpass, leerElementos } from '../servidor/mapeo/supermercados.ts';
-import { cadenaConocida } from '../servidor/mapeo/tiendaOnline.ts';
+import { CADENAS, cadenaDeTienda, validarCadena } from '../servidor/cadenas/cadenas.ts';
 
 describe('VTEX', () => {
   it('toma el precio más bajo disponible y omite los sin stock', () => {
@@ -24,13 +24,28 @@ describe('VTEX', () => {
   });
 });
 
-describe('cadenas de Cali', () => {
+describe('cadenas (servidor/cadenas/*.json)', () => {
+  it('carga todos los archivos', () => {
+    expect(CADENAS.map((c) => c.id)).toEqual(
+      expect.arrayContaining(['exito', 'carulla', 'olimpica', 'jumbo', 'd1', 'mercamio', 'superinter']),
+    );
+  });
+
   it('reconoce las cadenas por nombre o marca', () => {
-    expect(cadenaConocida(undefined, 'Éxito Express Ciudad Jardín')?.url).toBe('https://www.exito.com');
-    expect(cadenaConocida('Olímpica')?.url).toBe('https://www.olimpica.com');
-    expect(cadenaConocida('Tiendas D1')?.url).toBe('https://www.d1.com.co');
-    expect(cadenaConocida('Metro')?.url).toBe('https://www.jumbocolombia.com');
-    expect(cadenaConocida('Súper Inter', 'Metropolitana')).toBeUndefined();
+    expect(cadenaDeTienda(undefined, 'Éxito Express Ciudad Jardín')?.tiendaOnline?.url).toBe('https://www.exito.com');
+    expect(cadenaDeTienda('Olímpica')?.tiendaOnline?.url).toBe('https://www.olimpica.com');
+    expect(cadenaDeTienda('Tiendas D1')?.id).toBe('d1');
+    expect(cadenaDeTienda('Metro')?.id).toBe('jumbo');
+    expect(cadenaDeTienda('Metropolitana')).toBeUndefined();
+  });
+
+  it('sabe qué cadenas no venden online', () => {
+    expect(cadenaDeTienda('Súper Inter Guadalupe')?.tiendaOnline).toBeNull();
+  });
+
+  it('avisa qué está mal en un archivo', () => {
+    expect(() => validarCadena({ id: 'otra', nombre: 'X', alias: ['x'], tiendaOnline: null }, 'x.json')).toThrow('x.json');
+    expect(() => validarCadena({ id: 'x', nombre: 'X', alias: ['x'], tiendaOnline: { url: '' } }, 'x.json')).toThrow('tiendaOnline');
   });
 });
 

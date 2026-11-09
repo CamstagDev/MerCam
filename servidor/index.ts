@@ -6,6 +6,7 @@
 //   npm run servidor       http://localhost:3010
 //
 //   GET  /api/salud        para ver que está vivo
+//   GET  /api/cadenas      las cadenas conocidas (servidor/cadenas/*.json)
 //   POST /api/mapear       { direccion, radioM } -> supermercados cercanos
 //                          y si venden online. Se usa pocas veces.
 //   POST /api/buscar       { tiendas, productos } -> ofertas con precios
@@ -16,7 +17,8 @@ import type { PedidoBusqueda, PedidoMapeo, RespuestaMapeo } from '../compartido/
 import { buscarLista } from './busqueda.ts';
 import { geocodificar } from './mapeo/geocodificar.ts';
 import { buscarSupermercados } from './mapeo/supermercados.ts';
-import { detectarTiendaOnline, normalizarNombre } from './mapeo/tiendaOnline.ts';
+import { detectarTiendaOnline } from './mapeo/tiendaOnline.ts';
+import { CADENAS, cadenaDeTienda } from './cadenas/cadenas.ts';
 import { BUSCADORES } from './buscadores/registro.ts';
 
 const PUERTO = Number(process.env.PORT ?? 3010); // 3003 es SudoCam
@@ -40,6 +42,11 @@ app.get('/api/salud', (_req, res) => {
   res.json({ ok: true });
 });
 
+// Las cadenas conocidas, tal como están en servidor/cadenas/*.json.
+app.get('/api/cadenas', (_req, res) => {
+  res.json(CADENAS);
+});
+
 app.post('/api/mapear', async (req, res) => {
   const { direccion, radioM } = req.body as Partial<PedidoMapeo>;
   if (!direccion || typeof direccion !== 'string') {
@@ -55,11 +62,11 @@ app.post('/api/mapear', async (req, res) => {
     // Cadenas con su propia lista de sedes (Mercamio): se usan sus sedes
     // en vez de las que trae OpenStreetMap.
     for (const buscador of BUSCADORES) {
-      if (!buscador.sedesCerca || !buscador.patronCadena) continue;
+      if (!buscador.sedesCerca || !buscador.cadenaId) continue;
       try {
         const sedes = await buscador.sedesCerca(coordenadas, radio);
-        const patron = buscador.patronCadena;
-        encontradas = encontradas.filter((t) => ![t.nombre, t.cadena].some((n) => n && patron.test(normalizarNombre(n))));
+        const cadenaId = buscador.cadenaId;
+        encontradas = encontradas.filter((t) => cadenaDeTienda(t.cadena, t.nombre)?.id !== cadenaId);
         tiendas.push(...sedes);
       } catch (error) {
         console.error(`No se pudieron leer las sedes de ${buscador.id}:`, error);
