@@ -1,7 +1,12 @@
 // Las cadenas de supermercados, una por archivo JSON en esta carpeta
 // (exito.json, mercamio.json...). Para sumar o cambiar una cadena basta
-// con editar, copiar o borrar su archivo y reiniciar el servidor; no hace
-// falta tocar código salvo que necesite un buscador nuevo.
+// con editar, copiar o borrar su archivo y reiniciar el servidor (o volver
+// a compilar la app); no hace falta tocar código salvo que necesite un
+// buscador nuevo.
+//
+// Este archivo no lee el disco, para que también corra dentro de la app
+// del teléfono: el servidor carga los JSON con disco.ts y la app con
+// import.meta.glob (src/datos/motorLocal.ts).
 //
 // Formato de cada archivo:
 //   id            igual al nombre del archivo
@@ -13,7 +18,6 @@
 //   config        opcional: datos que su buscador necesita
 //   notas         opcional: lo que haya que saber de la cadena
 
-import { readdirSync, readFileSync } from 'node:fs';
 import type { TiendaOnline } from '../../compartido/tipos.ts';
 
 export interface Cadena {
@@ -25,8 +29,6 @@ export interface Cadena {
   config?: Record<string, string>;
   notas?: string;
 }
-
-const CARPETA = new URL('./', import.meta.url);
 
 export function normalizarNombre(nombre: string): string {
   return nombre.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -45,14 +47,17 @@ export function validarCadena(datos: unknown, archivo: string): Cadena {
   return { pais: 'CO', ...c, alias: c.alias.map(normalizarNombre) } as Cadena;
 }
 
-function cargar(): Cadena[] {
-  return readdirSync(CARPETA)
+/** Las cadenas cargadas; se llena con registrarCadenas. */
+export const CADENAS: Cadena[] = [];
+
+/** Carga las cadenas a partir de { 'exito.json': {...}, ... }. */
+export function registrarCadenas(archivos: Record<string, unknown>): void {
+  const cadenas = Object.keys(archivos)
     .filter((archivo) => archivo.endsWith('.json'))
     .sort()
-    .map((archivo) => validarCadena(JSON.parse(readFileSync(new URL(archivo, CARPETA), 'utf8')), archivo));
+    .map((archivo) => validarCadena(archivos[archivo], archivo));
+  CADENAS.splice(0, CADENAS.length, ...cadenas);
 }
-
-export const CADENAS: Cadena[] = cargar();
 
 export function cadenaPorId(id: string): Cadena | undefined {
   return CADENAS.find((c) => c.id === id);

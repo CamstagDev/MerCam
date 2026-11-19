@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { leerProductosVtex } from '../servidor/buscadores/vtex.ts';
 import { textosABuscar } from '../servidor/busqueda.ts';
 import { consultaOverpass, leerElementos } from '../servidor/mapeo/supermercados.ts';
+import { variantesDireccion } from '../servidor/mapeo/geocodificar.ts';
 import { CADENAS, cadenaDeTienda, validarCadena } from '../servidor/cadenas/cadenas.ts';
+import '../servidor/cadenas/disco.ts';
 
 describe('VTEX', () => {
   it('toma el precio más bajo disponible y omite los sin stock', () => {
@@ -70,5 +72,18 @@ describe('Overpass', () => {
     expect(tiendas).toHaveLength(2);
     expect(tiendas[0]).toMatchObject({ nombre: 'Súper Centro', direccion: 'Calle 12', osmId: 'node/1', sitioWeb: 'https://cadena.test' });
     expect(tiendas[1]).toMatchObject({ nombre: 'Otra', coordenadas: { lat: 3, lon: 4 } });
+  });
+});
+
+describe('direcciones colombianas para Nominatim', () => {
+  it('prueba sin la placa cuando la dirección completa no aparece', () => {
+    expect(variantesDireccion('Calle 73 Norte #2-22, Cali')).toEqual(['Calle 73 Norte #2-22, Cali', 'Calle 73 Norte, Cali']);
+    expect(variantesDireccion('Cra 100 No. 11-60, Cali').at(-1)).toBe('Carrera 100, Cali');
+    expect(variantesDireccion('Av 6N # 28N-23, Cali').at(-1)).toBe('Avenida 6 Norte, Cali');
+    expect(variantesDireccion('Cl 13 #100-30 sur, Cali').at(-1)).toBe('Calle 13 sur, Cali');
+  });
+
+  it('no repite la consulta si no hay nada que simplificar', () => {
+    expect(variantesDireccion('Calle 5, Cali')).toEqual(['Calle 5, Cali']);
   });
 });

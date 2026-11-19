@@ -4,9 +4,10 @@
 
 import type { Oferta, PedidoBusqueda, RespuestaBusqueda } from '../compartido/tipos.ts';
 import { buscadorPorId } from './buscadores/registro.ts';
+import { entorno } from './red.ts';
 import type { ResultadoBuscador } from './buscadores/buscador.ts';
 
-export const MONEDA = process.env.MERCAM_MONEDA ?? '$';
+export const MONEDA = entorno('MERCAM_MONEDA') ?? '$';
 
 /** Con marca se busca "producto marca" y también solo "producto". */
 export function textosABuscar(nombre: string, marca?: string): string[] {
