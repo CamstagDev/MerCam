@@ -82,8 +82,10 @@ app y abre el navegador; la primera vez instala las librerías.
 | `npm run importar:cambasket -- tu@correo.com` | Lee la base de Cambasket (PostgreSQL) y deja `cambasket-a-mercam.json` para cargarlo en la app desde Respaldo. La clave de la base va en `PGPASSWORD` |
 | `npm run version:nueva -- parche` | Nueva versión (parche, menor o mayor): cambia el número, cierra el CHANGELOG, hace commit y etiqueta. Con `git push --follow-tags`, GitHub compila y publica el APK |
 
-En Android la app necesita la dirección del servidor: crea un `.env` con
-`VITE_SERVIDOR=http://<ip-del-pc>:3010` antes de `npm run android:apk`
+En Android la app no necesita el servidor: mapea y busca precios por su
+cuenta (`src/datos/motorLocal.ts`, con las peticiones por la red nativa
+gracias a `CapacitorHttp`). Si igual quieres que use uno, crea un `.env`
+con `VITE_SERVIDOR=http://<ip-del-pc>:3010` antes de `npm run android:apk`
 (en GitHub, el secreto `MERCAM_SERVIDOR`).
 
 Para Android no hace falta Android Studio: basta con un JDK 21 y las
@@ -114,7 +116,7 @@ Cada cadena tiene su archivo en `servidor/cadenas/` (`exito.json`,
 tiendas en OpenStreetMap (`alias`), su tienda online (`url` y qué
 buscador usar) o `null` si se sabe que no vende online, y notas. Para
 sumar, cambiar, exportar o importar una cadena basta con copiar o editar
-su archivo y reiniciar el servidor; el formato está explicado en
+su archivo y reiniciar el servidor (y recompilar el APK para el teléfono); el formato está explicado en
 `servidor/cadenas/cadenas.ts`. `GET /api/cadenas` muestra las cargadas.
 
 Si la cadena no tiene archivo pero usa VTEX y OpenStreetMap trae su

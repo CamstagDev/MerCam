@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { distanciaM, leerProductosMercamio, leerSedes } from '../servidor/buscadores/mercamio.ts';
+import '../servidor/cadenas/disco.ts';
 
 const calle5 = { lat: 3.4059529, lon: -76.5467996 };
 

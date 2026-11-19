@@ -1,6 +1,12 @@
 // fetch con tiempo límite y un User-Agent que dice quiénes somos (lo piden
 // Nominatim y Overpass, y es lo correcto con cualquier tienda).
 
+// Este código corre en el servidor (Node) y también dentro de la app de
+// Android, donde no existe process: por eso se lee así.
+export function entorno(nombre: string): string | undefined {
+  return (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[nombre];
+}
+
 export const USER_AGENT = 'MerCam/0.1 (+https://github.com/CamstagDev/MerCam)';
 
 export async function pedir(url: string, opciones: RequestInit = {}, limiteMs = 15000): Promise<Response> {

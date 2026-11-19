@@ -34,3 +34,8 @@ la versión nueva (ver scripts/nueva-version.mjs).
   desde la despensa o un mercado guardado, y el total aproximado.
 - Respaldo: descargar y restaurar los datos, e importar los de Cambasket
   (`npm run importar:cambasket`).
+- Arreglo: en Android buscar supermercados y precios no funcionaba porque
+  la app no tenía servidor al que llamar. Ahora el teléfono busca por su
+  cuenta, sin necesitar el PC.
+- Arreglo: direcciones con placa ("Calle 73 Norte #2-22, Cali") que
+  OpenStreetMap no encontraba: si no aparece, se busca la calle sola.

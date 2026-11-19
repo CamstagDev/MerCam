@@ -33,8 +33,9 @@ jobs:
           java-version: 21
       - run: npm ci
       - run: npm test
-      # Dirección del servidor de búsqueda para la app de Android (secreto
-      # MERCAM_SERVIDOR, p. ej. https://mercam.ejemplo.com).
+      # Opcional: servidor de búsqueda para la app de Android (secreto
+      # MERCAM_SERVIDOR, p. ej. https://mercam.ejemplo.com). Vacío, la app
+      # busca por su cuenta.
       - run: echo "VITE_SERVIDOR=${{ secrets.MERCAM_SERVIDOR }}" > .env.production
       - run: npm run android:sync
       # El APK de prueba se firma con la clave de depuración del PC de
