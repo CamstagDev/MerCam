@@ -26,3 +26,6 @@ Thumbs.db
 
 # Servidor
 servidor/*.log
+
+# Datos exportados de Cambasket (personales)
+cambasket-a-mercam.json

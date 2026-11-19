@@ -114,3 +114,109 @@ button.enlace { background: none; color: var(--accent); padding: 4px 0; }
 .oferta.de-la-marca strong { color: var(--marca); }
 .oferta.elegida { background: rgba(79, 209, 138, 0.1); border-radius: 8px; padding-inline: 8px; }
 s { color: var(--text-muted); }
+
+/* ---- Despensa, planes de comidas e historial de precios ---- */
+
+:root {
+  --positivo: #4fd18a;
+  --negativo: #ff6b6b;
+  --oferta: #f5a623;
+}
+
+.formulario select, .formulario textarea, #app textarea {
+  flex: 1 1 140px;
+  min-width: 0;
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+#app textarea { width: 100%; margin: 8px 0; }
+.con-sugerencias { display: contents; }
+.con-sugerencias input { flex: 1 1 140px; }
+.formulario input[type='search'] { flex: 2 1 180px; }
+input[type='checkbox'] { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+
+.crece { flex: 1; min-width: 0; }
+.bloque { display: block; }
+.acciones { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.pie { margin-top: 32px; text-align: center; color: var(--text-muted); }
+.filas li.cancelado, .movimiento.cancelado { opacity: 0.55; }
+
+.plegable { margin: 8px 0; }
+.plegable > summary { cursor: pointer; color: var(--accent); padding: 6px 0; font-weight: 600; }
+.filas .plegable > summary { font-weight: 400; font-size: 0.9rem; }
+
+button.peligro { background: rgba(255, 107, 107, 0.15); color: var(--negativo); border-color: rgba(255, 107, 107, 0.4); }
+
+.insignia {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  vertical-align: middle;
+  background: var(--surface-strong);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.insignia.acento, .insignia.positivo { color: var(--positivo); border-color: rgba(79, 209, 138, 0.4); }
+.insignia.negativo, .insignia.caro { color: var(--negativo); border-color: rgba(255, 107, 107, 0.4); }
+.insignia.oferta, .insignia.minimo { color: var(--accent-contrast); background: var(--oferta); border-color: var(--oferta); }
+.negativo { color: var(--negativo); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+}
+.chip input { width: 16px; height: 16px; }
+
+.lista-articulos { display: flex; flex-direction: column; gap: 6px; }
+.fila-articulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radio);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.fila-articulo-info { flex: 1; min-width: 0; display: flex; flex-direction: column; color: var(--text); text-decoration: none; }
+.fila-articulo-lado { display: flex; flex-direction: column; align-items: flex-end; white-space: nowrap; }
+.fila-articulo.sin-stock .fila-articulo-lado strong { color: var(--negativo); }
+.grupo-generico { border-radius: var(--radio); border: 1px solid var(--border); padding: 6px 10px; }
+.grupo-generico > summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
+.grupo-generico .fila-articulo { margin: 6px 0 6px 12px; }
+
+.cifras { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 12px 0; }
+.cifra { display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: var(--radio); background: var(--surface); border: 1px solid var(--border); }
+.cifra strong { font-size: 1.15rem; }
+.cifra.negativo strong { color: var(--negativo); }
+
+.movimientos li { display: block; }
+.movimiento-cabeza { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.entrada { color: var(--positivo); }
+.salida { color: var(--negativo); }
+
+.comida.hecha { opacity: 0.7; }
+.comida .insignia { margin: 6px 0 0; }
+
+.minigrafico { width: 96px; height: 24px; flex: none; }
+.minigrafico polyline { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+
+code { background: var(--surface-strong); padding: 1px 6px; border-radius: 6px; }
+
+@media (max-width: 480px) {
+  .filas li { flex-wrap: wrap; }
+  .movimiento-cabeza { flex-wrap: wrap; }
+}

@@ -19,5 +19,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "servidor", "compartido", "tests", "vite.config.ts"]
+  "include": ["src", "servidor", "compartido", "tests", "scripts/importar-cambasket.ts", "vite.config.ts"]
 }

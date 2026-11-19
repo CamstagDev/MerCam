@@ -14,6 +14,22 @@
 //              las manuales las mantiene el usuario.
 //   Eleccion   qué oferta eligió el usuario para cada producto. Con eso se
 //              arma la "minilista": qué comprar en cada tienda.
+//
+// La despensa (lo que venía de Cambasket):
+//
+//   Despensa   lo que hay en casa: artículos con su stock.
+//   Articulo   un producto de la despensa ("Arroz Diana x 500g"), con su
+//              nombre general ("Arroz"), unidad, marca y categorías.
+//   Movimiento una compra (entra stock, con precio) o un consumo (sale).
+//              El stock y el precio promedio se calculan de aquí.
+//   Mercado    un grupo de artículos guardado ("Obligatorios del mes")
+//              para pasarlo de una vez a una lista.
+//   Plan       un plan de comidas. Sus Comidas usan artículos: lo que
+//              piden queda "separado" hasta que se ejecutan (y entonces se
+//              descuenta del stock). Lo que falta se convierte en una lista
+//              para comparar precios en los supermercados cercanos.
+//   SeriePrecio el historial de precios de un producto en una tienda, para
+//              saber si hoy está en oferta comparado con lo de siempre.
 
 export interface Coordenadas {
   lat: number;
@@ -66,6 +82,10 @@ export interface Producto {
   /** Si se indica, se buscan primero las ofertas de esa marca. */
   marca?: string;
   cantidad: number;
+  /** Artículo de la despensa al que corresponde: al comprarlo, suma stock. */
+  articuloId?: string;
+  /** Precio total estimado, si el usuario lo anota (o viene del historial). */
+  precioEstimado?: number;
 }
 
 export interface Lista {
@@ -95,6 +115,107 @@ export interface Eleccion {
   listaId: string;
   productoId: string;
   oferta: Oferta;
+}
+
+// ---- Despensa, planes de comidas e historial de precios ----
+
+/** Marcas, unidades de medida y categorías: catálogos que se pueden apagar. */
+export interface ItemCatalogo {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  activo: boolean;
+}
+
+export interface Despensa {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  creada: string;
+}
+
+export interface Articulo {
+  id: string;
+  despensaId: string;
+  /** Título ("Arroz Diana x 500g"). */
+  nombre: string;
+  /** Nombre general ("Arroz"): agrupa variantes y autocompleta. */
+  generico: string;
+  descripcion?: string;
+  unidadId: string;
+  marcaId?: string;
+  categoriaIds: string[];
+  creado: string;
+}
+
+export interface Movimiento {
+  id: string;
+  articuloId: string;
+  tipo: 'compra' | 'consumo';
+  cantidad: number;
+  /** Solo compras: lo que se pagó por toda la cantidad. */
+  precioTotal?: number;
+  fecha: string;
+  descripcion?: string;
+  /** Inhabilitado (false) no cuenta para el stock ni el precio promedio. */
+  activo: boolean;
+  /** Dónde se compró, si se sabe. */
+  tienda?: string;
+  /** Si lo generó una comida al ejecutarse. */
+  comidaId?: string;
+}
+
+export interface Mercado {
+  id: string;
+  despensaId: string;
+  nombre: string;
+  articuloIds: string[];
+  creado: string;
+}
+
+export interface Plan {
+  id: string;
+  despensaId: string;
+  nombre: string;
+  creado: string;
+}
+
+export interface LineaComida {
+  id: string;
+  articuloId: string;
+  cantidad: number;
+}
+
+export interface Comida {
+  id: string;
+  planId: string;
+  nombre: string;
+  /** Día planeado (AAAA-MM-DD), opcional. */
+  fecha?: string;
+  lineas: LineaComida[];
+  /** Cuándo se ejecutó (se descontó del stock); sin valor, está pendiente. */
+  ejecutada?: string;
+  creada: string;
+}
+
+export interface PuntoPrecio {
+  /** Día (AAAA-MM-DD): un punto por día, el último visto. */
+  dia: string;
+  precio: number;
+  precioLista?: number;
+}
+
+export interface SeriePrecio {
+  /** tienda|título normalizado. */
+  clave: string;
+  /** Nombre del producto buscado, normalizado (para juntar series). */
+  producto: string;
+  titulo: string;
+  tienda: string;
+  tiendaId?: string;
+  origen: 'online' | 'manual' | 'compra';
+  moneda: string;
+  puntos: PuntoPrecio[];
 }
 
 // ---- Contrato HTTP con el servidor ----

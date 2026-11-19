@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "android:sync": "npm run build && cap sync android",
     "android:apk": "npm run android:sync && node scripts/gradle.mjs assembleDebug",
-    "version:nueva": "node scripts/nueva-version.mjs"
+    "version:nueva": "node scripts/nueva-version.mjs",
+    "importar:cambasket": "node scripts/importar-cambasket.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",
@@ -29,6 +30,8 @@
     "@capacitor/cli": "^8.5.3",
     "@types/express": "^5.0.3",
     "@types/node": "^24.19.2",
+    "@types/pg": "^8.23.1",
+    "pg": "^8.23.1",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.5"

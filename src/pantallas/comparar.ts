@@ -2,13 +2,31 @@
 // Cada vez que se entra se vuelven a pedir los precios online (los
 // descuentos cambian de un día a otro). Por producto se ven las 3 más
 // baratas (primero las de la marca pedida) y "Ver más" muestra todas.
+// Cada precio se anota en el historial y se compara con lo que costaba
+// otros días en esa tienda: así se ve si la "oferta" es de verdad.
 
 import type { Eleccion, Oferta, Producto } from '../../compartido/tipos.ts';
 import { cambiar, guardarOfertasOnline, leer } from '../datos/almacen.ts';
+import { TEXTO_VEREDICTO, analizarOferta, anotarPrecio } from '../logica/historial.ts';
 import { buscar } from '../datos/servidor.ts';
 import { OFERTAS_VISIBLES, esDeLaMarca, ofertasVisibles, ordenarOfertas } from '../logica/comparar.ts';
 import type { Pantalla } from '../router.ts';
-import { boton, el, precio, vacio } from '../ui/dom.ts';
+import { boton, el, insignia, precio, vacio } from '../ui/dom.ts';
+
+/** Insignias de una oferta: descuento que muestra la tienda y comparación con el historial. */
+function insignias(oferta: Oferta): HTMLElement[] {
+  const resultado: HTMLElement[] = [];
+  if (oferta.precioLista && oferta.precioLista > oferta.precio) {
+    resultado.push(insignia(`-${Math.round((1 - oferta.precio / oferta.precioLista) * 100)} %`, 'oferta', 'Descuento que muestra la tienda'));
+  }
+  const analisis = analizarOferta(leer().historial, oferta.tiendaId, oferta.titulo, oferta.precio);
+  if (analisis.veredicto !== 'nuevo' && analisis.veredicto !== 'normal') {
+    const detalle = `Promedio de ${analisis.dias} días: ${precio(Math.round(analisis.promedio!), oferta.moneda)} · mínimo ${precio(analisis.minimo!, oferta.moneda)}`;
+    const variacion = Math.round(analisis.variacion! * 100);
+    resultado.push(insignia(`${TEXTO_VEREDICTO[analisis.veredicto]} (${variacion > 0 ? '+' : ''}${variacion} %)`, analisis.veredicto, detalle));
+  }
+  return resultado;
+}
 
 export const pantallaComparar: Pantalla = {
   titulo: 'Comparar precios',
@@ -61,6 +79,7 @@ export const pantallaComparar: Pantalla = {
                   oferta.precioLista ? el('s', {}, ` ${precio(oferta.precioLista, oferta.moneda)}`) : null,
                   ` ${oferta.titulo}`,
                   el('small', {}, ` · ${tienda?.nombre ?? '?'}`),
+                  ...insignias(oferta),
                 ),
                 boton(esLaElegida ? 'Elegida' : 'Elegir', () => elegir(producto, oferta), esLaElegida ? '' : 'secundario'),
               ),
@@ -86,6 +105,21 @@ export const pantallaComparar: Pantalla = {
     })
       .then(({ ofertas, errores }) => {
         guardarOfertasOnline(online.map((t) => t.id), lista.productos.map((p) => p.id), ofertas);
+        cambiar((d) => {
+          for (const o of ofertas) {
+            anotarPrecio(d.historial, {
+              producto: lista.productos.find((p) => p.id === o.productoId)?.nombre ?? o.titulo,
+              titulo: o.titulo,
+              tienda: tiendas.find((t) => t.id === o.tiendaId)?.nombre ?? '?',
+              tiendaId: o.tiendaId,
+              precio: o.precio,
+              precioLista: o.precioLista,
+              moneda: o.moneda,
+              origen: 'online',
+              fecha: o.actualizada,
+            });
+          }
+        });
         estado.textContent = errores.length
           ? `Precios actualizados. Fallaron: ${errores.map((e) => tiendas.find((t) => t.id === e.tiendaId)?.nombre).join(', ')}.`
           : 'Precios actualizados.';

@@ -2,9 +2,10 @@
 // enlace a la tienda online (la compra se hace en su página).
 
 import { armarMinilista } from '../logica/comparar.ts';
-import { leer } from '../datos/almacen.ts';
-import type { Pantalla } from '../router.ts';
-import { el, precio, vacio } from '../ui/dom.ts';
+import { marcarComprados } from '../logica/despensa.ts';
+import { cambiar, leer, nuevoId } from '../datos/almacen.ts';
+import { redibujar, type Pantalla } from '../router.ts';
+import { boton, el, precio, vacio } from '../ui/dom.ts';
 
 export const pantallaMinilista: Pantalla = {
   titulo: 'Dónde compro cada cosa',
@@ -30,6 +31,10 @@ export const pantallaMinilista: Pantalla = {
           { class: 'producto' },
           el('h3', {}, tienda.nombre, el('small', {}, ` · ${precio(total, moneda)}`)),
           tienda.online ? el('p', {}, el('a', { href: tienda.online.url, target: '_blank', rel: 'noopener' }, 'Ir a la tienda online')) : null,
+          boton('✓ Ya compré lo de esta tienda', () => {
+            cambiar((d) => marcarComprados(d, lista.id, deLaTienda.map((e) => e.productoId), nuevoId));
+            redibujar();
+          }, 'secundario'),
           el(
             'ul',
             { class: 'filas' },
