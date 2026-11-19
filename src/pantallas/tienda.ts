@@ -2,6 +2,7 @@
 // que carga el usuario (mantenerlos al día es cosa suya).
 
 import { claveManual } from '../logica/comparar.ts';
+import { anotarPrecio } from '../logica/historial.ts';
 import { cambiar, leer } from '../datos/almacen.ts';
 import { redibujar, type Pantalla } from '../router.ts';
 import { boton, el, formulario, precio, vacio } from '../ui/dom.ts';
@@ -68,6 +69,15 @@ export const pantallaTienda: Pantalla = {
               moneda: MONEDA_MANUAL,
               origen: 'manual',
               actualizada: new Date().toISOString(),
+            });
+            anotarPrecio(d.historial, {
+              producto: nombre,
+              titulo,
+              tienda: tienda.nombre,
+              tiendaId: tienda.id,
+              precio: Number(valor),
+              moneda: MONEDA_MANUAL,
+              origen: 'manual',
             });
           });
           redibujar();

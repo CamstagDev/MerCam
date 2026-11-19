@@ -4,7 +4,10 @@ Arma tu lista de compras y MerCam busca cada producto en los
 supermercados de tu zona para que sepas qué comprar dónde y gastes menos.
 Los precios de las tiendas online se buscan en el momento (los descuentos
 cambian de un día a otro); los almacenes sin página web se agregan a mano
-con sus precios.
+con sus precios. Además lleva tu despensa (lo que tienes en casa y cuánto
+pagaste), tus planes de comidas y el historial de precios de cada
+producto, para saber si una oferta lo es de verdad. (La despensa y los
+planes vienen de Cambasket, que quedó dentro de MerCam.)
 
 ## Cómo funciona
 
@@ -24,6 +27,26 @@ con sus precios.
 5. **Minilista.** Tocas "Elegir" en la oferta que quieres y MerCam arma
    la lista de qué comprar en cada tienda, con el total y el enlace a la
    tienda online (la compra se hace en su página).
+6. **Despensa.** Productos con nombre general ("Arroz"), título ("Arroz
+   Diana x 500 g"), unidad, marca y categorías. Registras compras (con
+   precio y tienda) y consumos; el stock y el precio promedio salen de
+   ahí. Puedes guardar grupos de productos como "mercados" ("Obligatorios
+   del mes") y pasarlos a una lista de una vez. Al marcar como comprado
+   algo de una lista, se suma a la despensa con el precio de la oferta
+   elegida.
+7. **Planes de comidas.** Un plan tiene comidas y cada comida usa
+   productos de la despensa: mientras está pendiente, eso queda separado;
+   al ejecutarla se descuenta (y se puede deshacer). "Pasar a una lista y
+   comparar precios" arma la lista con lo que falta y desde ahí lo buscas
+   en los supermercados cercanos.
+8. **Historial de precios.** Cada precio que MerCam ve (búsquedas, precios
+   a mano, compras) se anota por tienda, uno por día. Al comparar, cada
+   oferta dice si es "El más bajo visto", "En oferta" (7 % o más bajo que
+   su promedio) o "Más caro que lo usual"; en cada producto de la
+   despensa se ve su historial con un minigráfico.
+
+Como todo vive en el dispositivo, en **Respaldo** descargas una copia,
+la restauras o importas tus datos de Cambasket.
 
 ## Plataformas
 
@@ -56,6 +79,7 @@ app y abre el navegador; la primera vez instala las librerías.
 | `npm test` | Corre las pruebas automáticas |
 | `npm run tipos` | Revisa los tipos de TypeScript |
 | `npm run android:apk` | Genera `android/app/build/outputs/apk/debug/app-debug.apk` |
+| `npm run importar:cambasket -- tu@correo.com` | Lee la base de Cambasket (PostgreSQL) y deja `cambasket-a-mercam.json` para cargarlo en la app desde Respaldo. La clave de la base va en `PGPASSWORD` |
 | `npm run version:nueva -- parche` | Nueva versión (parche, menor o mayor): cambia el número, cierra el CHANGELOG, hace commit y etiqueta. Con `git push --follow-tags`, GitHub compila y publica el APK |
 
 En Android la app necesita la dirección del servidor: crea un `.env` con
@@ -70,9 +94,12 @@ herramientas de línea de comandos del SDK de Android, con las variables
 
 | Carpeta | Qué hay |
 |---|---|
-| `compartido/tipos.ts` | Los tipos de la app y el contrato con el servidor: Sitio, Tienda, Lista, Producto, Oferta, Elección |
-| `src/pantallas/` | Inicio, lista, sitios, tienda, comparar, minilista |
+| `compartido/tipos.ts` | Los tipos de la app y el contrato con el servidor: Sitio, Tienda, Lista, Producto, Oferta, Elección; y los de la despensa: Despensa, Artículo, Movimiento, Mercado, Plan, Comida, SeriePrecio |
+| `src/pantallas/` | Inicio, lista, sitios, tienda, comparar, minilista, despensa, artículo, catálogos, planes y comidas, respaldo |
 | `src/logica/comparar.ts` | Orden de ofertas (marca primero, más baratas), "Ver más" y la minilista |
+| `src/logica/despensa.ts` | Stock, precio promedio, lo separado por los planes, ejecutar comidas, marcar comprado, lo que falta para un plan |
+| `src/logica/historial.ts` | Historial de precios y si un precio es oferta, mínimo o caro |
+| `src/logica/importarCambasket.ts` | Pasa las tablas de Cambasket al formato de MerCam (lo usa `scripts/importar-cambasket.ts`) |
 | `src/datos/` | `almacen.ts` (localStorage) y `servidor.ts` (llamadas al servidor) |
 | `servidor/cadenas/` | Un archivo JSON por cadena de supermercados |
 | `servidor/mapeo/` | Dirección → coordenadas (Nominatim), supermercados cercanos (Overpass) y si venden online |

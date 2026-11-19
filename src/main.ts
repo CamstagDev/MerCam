@@ -6,6 +6,11 @@ import { pantallaSitio, pantallaSitioNuevo } from './pantallas/sitios.ts';
 import { pantallaTienda } from './pantallas/tienda.ts';
 import { pantallaComparar } from './pantallas/comparar.ts';
 import { pantallaMinilista } from './pantallas/minilista.ts';
+import { pantallaDespensa } from './pantallas/despensa.ts';
+import { pantallaArticulo } from './pantallas/articulo.ts';
+import { pantallaCatalogos } from './pantallas/catalogos.ts';
+import { pantallaComida, pantallaPlan, pantallaPlanes } from './pantallas/planes.ts';
+import { pantallaRespaldo } from './pantallas/respaldo.ts';
 import { el } from './ui/dom.ts';
 import { VERSION_APP } from './version.ts';
 
@@ -16,6 +21,13 @@ registrarPantalla('sitio', pantallaSitio);
 registrarPantalla('tienda', pantallaTienda);
 registrarPantalla('comparar', pantallaComparar);
 registrarPantalla('minilista', pantallaMinilista);
+registrarPantalla('despensa', pantallaDespensa);
+registrarPantalla('articulo', pantallaArticulo);
+registrarPantalla('catalogos', pantallaCatalogos);
+registrarPantalla('planes', pantallaPlanes);
+registrarPantalla('plan', pantallaPlan);
+registrarPantalla('comida', pantallaComida);
+registrarPantalla('respaldo', pantallaRespaldo);
 
 const barra = document.getElementById('barra')!;
 const app = document.getElementById('app')!;
