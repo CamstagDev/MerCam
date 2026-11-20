@@ -6,6 +6,9 @@ la versión nueva (ver scripts/nueva-version.mjs).
 
 ## Sin publicar
 
+- Comparar: los resultados se ordenan primero por qué tanto se parecen a
+  lo buscado y después por precio. Al buscar "leche" sale primero "Leche
+  entera Alpina" y no "Chocolatina de leche".
 - Comparar: cada oferta ocupa siempre dos líneas. Arriba, precio y
   producto; abajo, la tienda, el precio por litro o kilo, "+N sitios" para
   ver el mismo producto en otros sitios y "Ver en sitio ↗" si es online.
