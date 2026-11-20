@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Eleccion, Oferta, Producto, Tienda } from '../compartido/tipos.ts';
-import { armarMinilista, claveManual, ofertasVisibles, ordenarOfertas } from '../src/logica/comparar.ts';
+import { armarMinilista, claveManual, exactitud, ofertasVisibles, ordenarOfertas } from '../src/logica/comparar.ts';
 
 function oferta(parcial: Partial<Oferta>): Oferta {
   return {
@@ -30,7 +30,8 @@ describe('ordenarOfertas', () => {
       oferta({ precio: 250, titulo: 'Leche entera', marca: 'Colun' }),
       oferta({ precio: 200, titulo: 'Leche COLÚN 1 L' }),
     ]);
-    expect(ordenadas.map((o) => o.precio)).toEqual([200, 250, 100]);
+    // Dentro de la marca, primero la que dice "entera" como el producto.
+    expect(ordenadas.map((o) => o.precio)).toEqual([250, 200, 100]);
   });
 
   it('incluye los precios manuales cargados por nombre', () => {
@@ -85,5 +86,35 @@ describe('precios manuales por palabras', () => {
 
   it('las ofertas online siguen siendo solo de su producto', () => {
     expect(ordenarOfertas(leche, [oferta({ titulo: 'Leche entera', productoId: 'otro' })])).toEqual([]);
+  });
+});
+
+describe('orden por exactitud', () => {
+  it('primero lo que más se parece a lo buscado y después el precio', () => {
+    const ordenadas = ordenarOfertas({ id: 'p1', nombre: 'Leche', cantidad: 1 }, [
+      oferta({ precio: 1500, titulo: 'Chocolatina JET de leche' }),
+      oferta({ precio: 4200, titulo: 'Leche entera Alpina 1100 ml' }),
+      oferta({ precio: 3900, titulo: 'Leche deslactosada Colanta 1 L' }),
+      oferta({ precio: 2500, titulo: 'Arequipe con leche' }),
+    ]);
+    expect(ordenadas.map((o) => o.titulo)).toEqual([
+      'Leche deslactosada Colanta 1 L',
+      'Leche entera Alpina 1100 ml',
+      'Chocolatina JET de leche',
+      'Arequipe con leche',
+    ]);
+  });
+
+  it('con varias palabras, primero las que las traen todas', () => {
+    const ordenadas = ordenarOfertas(leche, [
+      oferta({ precio: 3900, titulo: 'Leche deslactosada 1 L' }),
+      oferta({ precio: 4200, titulo: 'LECHE ENTERA Alpina' }),
+      oferta({ precio: 1500, titulo: 'Chocolatina leche entera' }),
+    ]);
+    expect(ordenadas.map((o) => o.precio)).toEqual([4200, 3900, 1500]);
+  });
+
+  it('reconoce plurales', () => {
+    expect(exactitud('Huevos AA x 30', 'huevo')).toBe(3);
   });
 });

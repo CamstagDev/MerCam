@@ -56,18 +56,40 @@ export function esDelProducto(oferta: Oferta, producto: Producto): boolean {
   return oferta.origen === 'manual' && oferta.productoId.startsWith('manual:') && coincideManual(oferta.titulo, producto.nombre);
 }
 
+/** La misma palabra, aunque una esté en plural ("huevo" y "huevos"). */
+function mismaPalabra(a: string, b: string): boolean {
+  return a === b || a === `${b}s` || b === `${a}s` || a === `${b}es` || b === `${a}es`;
+}
+
+/**
+ * Qué tanto se parece una oferta al producto buscado (de 0 a 3): 2 puntos
+ * si el título empieza por la primera palabra del producto ("Leche entera
+ * Alpina" para "leche", no "Chocolatina de leche") y 1 si trae todas sus
+ * palabras ("Leche entera" y no "Leche deslactosada" para "leche entera").
+ */
+export function exactitud(titulo: string, nombreProducto: string): number {
+  const buscadas = palabras(nombreProducto);
+  const delTitulo = palabras(titulo);
+  if (!buscadas.length || !delTitulo.length) return 0;
+  const empieza = mismaPalabra(delTitulo[0]!, buscadas[0]!) ? 2 : 0;
+  const todas = buscadas.every((b) => delTitulo.some((t) => mismaPalabra(t, b))) ? 1 : 0;
+  return empieza + todas;
+}
+
 /**
  * Ofertas de un producto en el orden en que se muestran: si el producto
  * tiene marca, primero las de esa marca y después el resto; dentro de cada
- * grupo, de la más barata a la más cara.
+ * grupo, primero las que más se parecen a lo buscado (ver exactitud) y,
+ * entre las igual de parecidas, de la más barata a la más cara.
  */
 export function ordenarOfertas(producto: Producto, ofertas: Oferta[]): Oferta[] {
   const propias = ofertas.filter((o) => esDelProducto(o, producto));
-  const porPrecio = (a: Oferta, b: Oferta) => a.precio - b.precio;
-  if (!producto.marca) return [...propias].sort(porPrecio);
+  const puntos = new Map(propias.map((o) => [o, exactitud(o.titulo, producto.nombre)]));
+  const orden = (a: Oferta, b: Oferta) => puntos.get(b)! - puntos.get(a)! || a.precio - b.precio;
+  if (!producto.marca) return [...propias].sort(orden);
   const marca = producto.marca;
-  const deLaMarca = propias.filter((o) => esDeLaMarca(o, marca)).sort(porPrecio);
-  const otras = propias.filter((o) => !esDeLaMarca(o, marca)).sort(porPrecio);
+  const deLaMarca = propias.filter((o) => esDeLaMarca(o, marca)).sort(orden);
+  const otras = propias.filter((o) => !esDeLaMarca(o, marca)).sort(orden);
   return [...deLaMarca, ...otras];
 }
 
