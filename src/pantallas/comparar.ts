@@ -7,15 +7,23 @@
 // Las ofertas repetidas (sedes de una cadena con la misma tienda online,
 // mismo producto y precio) se muestran una vez con todas sus tiendas, y
 // cada una dice su precio por litro o por kilo si el título trae el tamaño.
+// El mismo producto en varios sitios se ve una sola vez, con el precio más
+// bajo; al tocarlo se despliegan los otros sitios, y el que se toque pasa
+// a ser el que se muestra.
 
-import type { Eleccion, Oferta, Producto } from '../../compartido/tipos.ts';
+import type { Eleccion, Oferta, Producto, Tienda } from '../../compartido/tipos.ts';
 import { cambiar, guardarOfertasOnline, leer } from '../datos/almacen.ts';
 import { TEXTO_VEREDICTO, analizarOferta, anotarPrecio } from '../logica/historial.ts';
 import { buscar } from '../datos/servidor.ts';
-import { OFERTAS_VISIBLES, agruparRepetidas, esDeLaMarca, ofertasVisibles, ordenarOfertas } from '../logica/comparar.ts';
+import { OFERTAS_VISIBLES, agruparIguales, agruparRepetidas, esDeLaMarca, ofertasVisibles, ordenarOfertas } from '../logica/comparar.ts';
 import { TEXTO_REFERENCIA, medidaDeContenido, medidaDeTitulo, precioDeReferencia } from '../logica/medidas.ts';
 import type { Pantalla } from '../router.ts';
 import { boton, el, insignia, pesos, precio, vacio } from '../ui/dom.ts';
+
+/** Identifica una opción de un grupo: sus tiendas y su precio. */
+function claveOpcion(oferta: Oferta, tiendas: Tienda[]): string {
+  return `${tiendas.map((t) => t.id).join(',') || oferta.tiendaId}|${oferta.precio}`;
+}
 
 /** "≈ $3.427/L · $3.427 por 1000 ml" según el tamaño del título y el contenido pedido. */
 function porMedida(oferta: Oferta, producto: Producto): string {
@@ -58,6 +66,10 @@ export const pantallaComparar: Pantalla = {
     const tiendas = leer().tiendas.filter((t) => t.sitioId === sitio.id);
     const online = tiendas.filter((t) => t.online);
     const verTodas = new Set<string>();
+    /** Por grupo de productos iguales: la opción que se tocó para mostrar. */
+    const mostradas = new Map<string, string>();
+    /** Grupos desplegados; sobreviven al redibujo cuando llegan los precios. */
+    const abiertos = new Set<string>();
     const estado = el('p', { class: 'ayuda' });
     const resultados = el('div');
     contenedor.append(estado, resultados, el('p', {}, el('a', { href: `#/minilista?lista=${lista.id}`, class: 'boton' }, 'Ver dónde compro cada cosa')));
@@ -78,34 +90,77 @@ export const pantallaComparar: Pantalla = {
       const ofertas = leer().ofertas.filter((o) => ids.has(o.tiendaId));
       resultados.replaceChildren(
         ...lista!.productos.map((producto) => {
-          const ordenadas = agruparRepetidas(ordenarOfertas(producto, ofertas), tiendas);
+          const iguales = agruparIguales(agruparRepetidas(ordenarOfertas(producto, ofertas), tiendas));
           const actual = elegida(producto)?.oferta;
           const contenido = producto.contenido
             ? ` ${producto.contenido} ${leer().unidades.find((u) => u.id === producto.contenidoUnidadId)?.nombre ?? ''}`.trimEnd()
             : '';
           const bloque = el('section', { class: 'producto' }, el('h3', {}, producto.nombre, el('small', {}, `${producto.marca ? ` ${producto.marca}` : ''}${contenido ? ` · ${contenido}` : ''}`)));
-          if (!ordenadas.length) bloque.append(vacio('Sin precios en este sitio.'));
-          for (const { oferta, tiendas: suyas } of ofertasVisibles(ordenadas, verTodas.has(producto.id))) {
-            const esLaElegida = Boolean(actual && actual.titulo === oferta.titulo && actual.precio === oferta.precio && suyas.some((t) => t.id === actual.tiendaId));
+          if (!iguales.length) bloque.append(vacio('Sin precios en este sitio.'));
+          for (const grupo of ofertasVisibles(iguales, verTodas.has(producto.id))) {
+            const idGrupo = `${producto.id}|${grupo.clave}`;
+            const delGrupo = (o: (typeof grupo.opciones)[number]) => claveOpcion(o.oferta, o.tiendas);
+            const esLaElegida = (o: (typeof grupo.opciones)[number]) =>
+              Boolean(actual && actual.titulo === o.oferta.titulo && actual.precio === o.oferta.precio && o.tiendas.some((t) => t.id === actual.tiendaId));
+            // Se muestra la que se tocó; si no, la elegida; si no, la más barata.
+            const mostrada =
+              grupo.opciones.find((o) => delGrupo(o) === mostradas.get(idGrupo)) ?? grupo.opciones.find(esLaElegida) ?? grupo.opciones[0]!;
+            const { oferta, tiendas: suyas } = mostrada;
+            const elegida = esLaElegida(mostrada);
+            const info = el(
+              'span',
+              {},
+              el('strong', {}, precio(oferta.precio, oferta.moneda)),
+              oferta.precioLista ? el('s', {}, ` ${precio(oferta.precioLista, oferta.moneda)}`) : null,
+              ` ${oferta.titulo}`,
+              el('small', {}, ` · ${suyas.map((t) => t.nombre).join(', ') || '?'}${porMedida(oferta, producto)}`),
+              ...insignias(oferta),
+            );
+            const otras = grupo.opciones.filter((o) => o !== mostrada);
+            let cuerpo: HTMLElement = info;
+            if (otras.length) {
+              const sitios = otras.reduce((n, o) => n + Math.max(1, o.tiendas.length), 0);
+              const detalles = el(
+                'details',
+                { class: 'iguales' },
+                el('summary', {}, info, el('small', { class: 'mas-sitios' }, ` ▾ en ${sitios} ${sitios === 1 ? 'sitio más' : 'sitios más'}`)),
+                el(
+                  'div',
+                  { class: 'alternativas' },
+                  ...otras.map((o) =>
+                    el(
+                      'button',
+                      {
+                        type: 'button',
+                        class: 'alternativa',
+                        title: 'Mostrar esta en lugar de la de arriba',
+                        onclick: () => {
+                          mostradas.set(idGrupo, delGrupo(o));
+                          abiertos.delete(idGrupo);
+                          dibujar();
+                        },
+                      },
+                      el('strong', {}, precio(o.oferta.precio, o.oferta.moneda)),
+                      el('small', {}, ` ${o.tiendas.map((t) => t.nombre).join(', ') || '?'}${o.oferta.precio !== oferta.precio ? ` · ${o.oferta.precio > oferta.precio ? '+' : '−'}${pesos(Math.abs(o.oferta.precio - oferta.precio))}` : ''}`),
+                    ),
+                  ),
+                ),
+              );
+              detalles.open = abiertos.has(idGrupo);
+              detalles.addEventListener('toggle', () => (detalles.open ? abiertos.add(idGrupo) : abiertos.delete(idGrupo)));
+              cuerpo = detalles;
+            }
             bloque.append(
               el(
                 'div',
-                { class: `oferta${esLaElegida ? ' elegida' : ''}${producto.marca && esDeLaMarca(oferta, producto.marca) ? ' de-la-marca' : ''}` },
-                el(
-                  'span',
-                  {},
-                  el('strong', {}, precio(oferta.precio, oferta.moneda)),
-                  oferta.precioLista ? el('s', {}, ` ${precio(oferta.precioLista, oferta.moneda)}`) : null,
-                  ` ${oferta.titulo}`,
-                  el('small', {}, ` · ${suyas.map((t) => t.nombre).join(', ') || '?'}${porMedida(oferta, producto)}`),
-                  ...insignias(oferta),
-                ),
-                boton(esLaElegida ? 'Elegida' : 'Elegir', () => elegir(producto, oferta), esLaElegida ? '' : 'secundario'),
+                { class: `oferta${elegida ? ' elegida' : ''}${producto.marca && esDeLaMarca(oferta, producto.marca) ? ' de-la-marca' : ''}` },
+                cuerpo,
+                boton(elegida ? 'Elegida' : 'Elegir', () => elegir(producto, oferta), elegida ? '' : 'secundario'),
               ),
             );
           }
-          if (ordenadas.length > OFERTAS_VISIBLES && !verTodas.has(producto.id)) {
-            bloque.append(boton(`Ver más (${ordenadas.length})`, () => { verTodas.add(producto.id); dibujar(); }, 'enlace'));
+          if (iguales.length > OFERTAS_VISIBLES && !verTodas.has(producto.id)) {
+            bloque.append(boton(`Ver más (${iguales.length})`, () => { verTodas.add(producto.id); dibujar(); }, 'enlace'));
           }
           return bloque;
         }),

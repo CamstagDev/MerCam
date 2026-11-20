@@ -232,3 +232,20 @@ code { background: var(--surface-strong); padding: 1px 6px; border-radius: 6px; 
   box-shadow: 0 0 6px 1px rgba(79, 209, 138, 0.8);
   vertical-align: middle;
 }
+
+/* Mismo producto en varios sitios: el más barato arriba y el resto plegado. */
+.oferta > details.iguales { flex: 1; min-width: 0; }
+.iguales > summary { cursor: pointer; list-style: none; }
+.iguales > summary::-webkit-details-marker { display: none; }
+.iguales .mas-sitios { color: var(--accent); white-space: nowrap; }
+.iguales[open] .mas-sitios { opacity: 0.6; }
+.alternativas { display: flex; flex-direction: column; gap: 4px; margin: 6px 0 2px 12px; }
+.alternativa {
+  text-align: left;
+  background: transparent;
+  color: var(--text);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+.alternativa:hover, .alternativa:focus-visible { border-style: solid; border-color: var(--accent); }
