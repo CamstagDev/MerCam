@@ -5,7 +5,7 @@ import { claveManual } from '../logica/comparar.ts';
 import { anotarPrecio } from '../logica/historial.ts';
 import { cambiar, leer } from '../datos/almacen.ts';
 import { redibujar, type Pantalla } from '../router.ts';
-import { boton, el, formulario, precio, vacio } from '../ui/dom.ts';
+import { boton, el, formulario, precio, puntoOnline, vacio } from '../ui/dom.ts';
 
 const MONEDA_MANUAL = '$';
 
@@ -21,7 +21,7 @@ export const pantallaTienda: Pantalla = {
 
     if (tienda.direccion) contenedor.append(el('p', { class: 'ayuda' }, tienda.direccion));
     if (tienda.online) {
-      contenedor.append(el('p', {}, 'Vende online: ', el('a', { href: tienda.online.url, target: '_blank', rel: 'noopener' }, tienda.online.url)));
+      contenedor.append(el('p', {}, puntoOnline(), 'Vende online: ', el('a', { href: tienda.online.url, target: '_blank', rel: 'noopener' }, tienda.online.url)));
     } else if (tienda.origen === 'mapeada') {
       contenedor.append(el('p', { class: 'ayuda' }, 'No encontramos su tienda online. Puedes cargar sus precios a mano.'));
     }

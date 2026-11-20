@@ -6,7 +6,7 @@ import { cambiar, leer, nuevoId } from '../datos/almacen.ts';
 import { mapear } from '../datos/servidor.ts';
 import { miUbicacion, ubicarDireccion } from '../datos/ubicacion.ts';
 import { navegar, redibujar, type Pantalla } from '../router.ts';
-import { boton, el, enlace, formulario, vacio } from '../ui/dom.ts';
+import { boton, el, formulario, puntoOnline, vacio } from '../ui/dom.ts';
 
 const RADIO_POR_DEFECTO = 2000;
 
@@ -168,7 +168,13 @@ export const pantallaSitio: Pantalla = {
             'div',
             { class: 'grilla' },
             ...tiendas.map((t) =>
-              enlace(`${t.nombre}${t.online ? ' · online' : ''}${t.origen === 'manual' ? ' · manual' : ''}`, `tienda?id=${t.id}`),
+              el(
+                'a',
+                { href: `#/tienda?id=${t.id}`, class: 'tarjeta' },
+                t.online ? puntoOnline() : null,
+                t.nombre,
+                t.origen === 'manual' ? el('small', {}, ' · manual') : null,
+              ),
             ),
           )
         : vacio('No hay tiendas todavía.'),

@@ -119,6 +119,11 @@ export function insignia(texto: string, clase = '', titulo?: string): HTMLSpanEl
   return el('span', { class: `insignia ${clase}`, title: titulo }, texto);
 }
 
+/** Bombillo verde: la tienda vende online. */
+export function puntoOnline(): HTMLSpanElement {
+  return el('span', { class: 'punto-online', title: 'Vende online', 'aria-label': 'Vende online', role: 'img' });
+}
+
 export function vacio(texto: string): HTMLParagraphElement {
   return el('p', { class: 'vacio' }, texto);
 }

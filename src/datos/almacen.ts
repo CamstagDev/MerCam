@@ -22,6 +22,7 @@ import type {
   Tienda,
 } from '../../compartido/tipos.ts';
 import { podarHistorial } from '../logica/historial.ts';
+import { reconocerUnidad } from '../logica/medidas.ts';
 
 const CLAVE = 'mercam:datos';
 /** 1: listas y sitios. 2: despensa, planes de comidas e historial de precios (Cambasket). */
@@ -52,6 +53,13 @@ export interface Datos {
 /** Unidades con las que arranca la app (se pueden renombrar o apagar). */
 export const UNIDADES_INICIALES = ['Unidad', 'kg', 'g', 'L', 'ml', 'Paquete', 'Docena'];
 
+/** Si a una unidad le falta su base y factor (datos viejos), se deducen de su nombre ("L" -> ml × 1000). */
+function completarUnidad(u: ItemCatalogo): ItemCatalogo {
+  if (u.base && u.factor) return u;
+  const reconocida = reconocerUnidad(u.nombre);
+  return reconocida ? { ...u, ...reconocida } : u;
+}
+
 export function datosVacios(): Datos {
   return {
     version: VERSION_DATOS,
@@ -67,7 +75,7 @@ export function datosVacios(): Datos {
     planes: [],
     comidas: [],
     marcas: [],
-    unidades: UNIDADES_INICIALES.map((nombre, i) => ({ id: `u${i + 1}`, nombre, activo: true })),
+    unidades: UNIDADES_INICIALES.map((nombre, i) => completarUnidad({ id: `u${i + 1}`, nombre, activo: true })),
     categorias: [],
     historial: {},
   };
@@ -77,7 +85,7 @@ export function datosVacios(): Datos {
 export function migrar(leidos: Partial<Datos>): Datos {
   const base = datosVacios();
   const datos: Datos = { ...base, ...leidos, version: VERSION_DATOS };
-  if (!leidos.unidades?.length) datos.unidades = base.unidades;
+  datos.unidades = leidos.unidades?.length ? leidos.unidades.map(completarUnidad) : base.unidades;
   return datos;
 }
 

@@ -48,7 +48,7 @@ export function ordenarOfertas(producto: Producto, ofertas: Oferta[]): Oferta[] 
   return [...deLaMarca, ...otras];
 }
 
-export function ofertasVisibles(ordenadas: Oferta[], verTodas: boolean): Oferta[] {
+export function ofertasVisibles<T>(ordenadas: T[], verTodas: boolean): T[] {
   return verTodas ? ordenadas : ordenadas.slice(0, OFERTAS_VISIBLES);
 }
 
@@ -82,4 +82,38 @@ export function armarMinilista(
     grupo.total += eleccion.oferta.precio * (cantidad.get(eleccion.productoId) ?? 1);
   }
   return [...grupos.values()].sort((a, b) => b.total - a.total);
+}
+
+export interface OfertaAgrupada {
+  /** La oferta que se muestra (y se elige): la de la primera tienda. */
+  oferta: Oferta;
+  /** Todas las tiendas que la tienen igual. */
+  tiendas: Tienda[];
+}
+
+/**
+ * De qué "tienda" es un precio a efectos de repetidos: las sedes de una
+ * misma cadena (Carulla y Carulla Pance) suelen compartir la tienda online
+ * y salen con el mismo producto al mismo precio.
+ */
+function grupoDeTienda(tienda: Tienda | undefined, tiendaId: string): string {
+  if (tienda?.cadena) return `cadena:${normalizar(tienda.cadena)}`;
+  if (tienda?.online) return `online:${tienda.online.url}`;
+  return `tienda:${tiendaId}`;
+}
+
+/**
+ * Junta las ofertas repetidas: mismo producto (título), mismo precio y
+ * misma cadena o tienda online. Se conserva el orden de entrada.
+ */
+export function agruparRepetidas(ofertas: Oferta[], tiendas: Tienda[]): OfertaAgrupada[] {
+  const grupos = new Map<string, OfertaAgrupada>();
+  for (const oferta of ofertas) {
+    const tienda = tiendas.find((t) => t.id === oferta.tiendaId);
+    const clave = `${grupoDeTienda(tienda, oferta.tiendaId)}|${normalizar(oferta.titulo)}|${oferta.precio}`;
+    const grupo = grupos.get(clave);
+    if (!grupo) grupos.set(clave, { oferta, tiendas: tienda ? [tienda] : [] });
+    else if (tienda && !grupo.tiendas.includes(tienda)) grupo.tiendas.push(tienda);
+  }
+  return [...grupos.values()];
 }

@@ -4,14 +4,31 @@
 // baratas (primero las de la marca pedida) y "Ver más" muestra todas.
 // Cada precio se anota en el historial y se compara con lo que costaba
 // otros días en esa tienda: así se ve si la "oferta" es de verdad.
+// Las ofertas repetidas (sedes de una cadena con la misma tienda online,
+// mismo producto y precio) se muestran una vez con todas sus tiendas, y
+// cada una dice su precio por litro o por kilo si el título trae el tamaño.
 
 import type { Eleccion, Oferta, Producto } from '../../compartido/tipos.ts';
 import { cambiar, guardarOfertasOnline, leer } from '../datos/almacen.ts';
 import { TEXTO_VEREDICTO, analizarOferta, anotarPrecio } from '../logica/historial.ts';
 import { buscar } from '../datos/servidor.ts';
-import { OFERTAS_VISIBLES, esDeLaMarca, ofertasVisibles, ordenarOfertas } from '../logica/comparar.ts';
+import { OFERTAS_VISIBLES, agruparRepetidas, esDeLaMarca, ofertasVisibles, ordenarOfertas } from '../logica/comparar.ts';
+import { TEXTO_REFERENCIA, medidaDeContenido, medidaDeTitulo, precioDeReferencia } from '../logica/medidas.ts';
 import type { Pantalla } from '../router.ts';
-import { boton, el, insignia, precio, vacio } from '../ui/dom.ts';
+import { boton, el, insignia, pesos, precio, vacio } from '../ui/dom.ts';
+
+/** "≈ $3.427/L · $3.427 por 1000 ml" según el tamaño del título y el contenido pedido. */
+function porMedida(oferta: Oferta, producto: Producto): string {
+  const medida = medidaDeTitulo(oferta.titulo);
+  if (!medida) return '';
+  const partes = [`${pesos(precioDeReferencia(oferta.precio, medida))}/${TEXTO_REFERENCIA[medida.base]}`];
+  const pedido = medidaDeContenido(producto.contenido, leer().unidades.find((u) => u.id === producto.contenidoUnidadId));
+  if (pedido && pedido.base === medida.base && Math.abs(pedido.cantidad - medida.cantidad) > 0.001) {
+    const unidad = leer().unidades.find((u) => u.id === producto.contenidoUnidadId)?.nombre ?? '';
+    partes.push(`${pesos((oferta.precio / medida.cantidad) * pedido.cantidad)} por ${producto.contenido} ${unidad}`);
+  }
+  return ` · ≈ ${partes.join(' · ')}`;
+}
 
 /** Insignias de una oferta: descuento que muestra la tienda y comparación con el historial. */
 function insignias(oferta: Oferta): HTMLElement[] {
@@ -61,13 +78,15 @@ export const pantallaComparar: Pantalla = {
       const ofertas = leer().ofertas.filter((o) => ids.has(o.tiendaId));
       resultados.replaceChildren(
         ...lista!.productos.map((producto) => {
-          const ordenadas = ordenarOfertas(producto, ofertas);
+          const ordenadas = agruparRepetidas(ordenarOfertas(producto, ofertas), tiendas);
           const actual = elegida(producto)?.oferta;
-          const bloque = el('section', { class: 'producto' }, el('h3', {}, producto.nombre, producto.marca ? el('small', {}, ` ${producto.marca}`) : null));
+          const contenido = producto.contenido
+            ? ` ${producto.contenido} ${leer().unidades.find((u) => u.id === producto.contenidoUnidadId)?.nombre ?? ''}`.trimEnd()
+            : '';
+          const bloque = el('section', { class: 'producto' }, el('h3', {}, producto.nombre, el('small', {}, `${producto.marca ? ` ${producto.marca}` : ''}${contenido ? ` · ${contenido}` : ''}`)));
           if (!ordenadas.length) bloque.append(vacio('Sin precios en este sitio.'));
-          for (const oferta of ofertasVisibles(ordenadas, verTodas.has(producto.id))) {
-            const tienda = tiendas.find((t) => t.id === oferta.tiendaId);
-            const esLaElegida = actual?.tiendaId === oferta.tiendaId && actual.titulo === oferta.titulo;
+          for (const { oferta, tiendas: suyas } of ofertasVisibles(ordenadas, verTodas.has(producto.id))) {
+            const esLaElegida = Boolean(actual && actual.titulo === oferta.titulo && actual.precio === oferta.precio && suyas.some((t) => t.id === actual.tiendaId));
             bloque.append(
               el(
                 'div',
@@ -78,7 +97,7 @@ export const pantallaComparar: Pantalla = {
                   el('strong', {}, precio(oferta.precio, oferta.moneda)),
                   oferta.precioLista ? el('s', {}, ` ${precio(oferta.precioLista, oferta.moneda)}`) : null,
                   ` ${oferta.titulo}`,
-                  el('small', {}, ` · ${tienda?.nombre ?? '?'}`),
+                  el('small', {}, ` · ${suyas.map((t) => t.nombre).join(', ') || '?'}${porMedida(oferta, producto)}`),
                   ...insignias(oferta),
                 ),
                 boton(esLaElegida ? 'Elegida' : 'Elegir', () => elegir(producto, oferta), esLaElegida ? '' : 'secundario'),
