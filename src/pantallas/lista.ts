@@ -7,22 +7,8 @@ import type { Lista } from '../../compartido/tipos.ts';
 import { cambiar, leer, nuevoId } from '../datos/almacen.ts';
 import { agregarArticulosALista, estadoArticulo, marcarComprados } from '../logica/despensa.ts';
 import { navegar, redibujar, type Pantalla } from '../router.ts';
-import { boton, cantidad, casilla, el, formulario, insignia, pesos, plegable, vacio, type Campo } from '../ui/dom.ts';
-import { leerContenido } from './comunes.ts';
-
-/** Contenido y su unidad de medida (p. ej. 1000 + ml), para comparar precios por litro o kilo. */
-function camposContenido(contenido?: number, unidadId?: string): Campo[] {
-  const unidades = leer().unidades.filter((u) => u.activo || u.id === unidadId);
-  return [
-    { nombre: 'contenido', etiqueta: 'Contenido (p. ej. 1000)', tipo: 'number', paso: 'any', valor: contenido ? String(contenido) : '' },
-    {
-      nombre: 'contenidoUnidadId',
-      etiqueta: 'Unidad de medida',
-      opciones: [{ valor: '', texto: 'Unidad de medida' }, ...unidades.map((u) => ({ valor: u.id, texto: u.nombre }))],
-      valor: unidadId ?? '',
-    },
-  ];
-}
+import { boton, cantidad, casilla, el, formulario, insignia, pesos, plegable, vacio } from '../ui/dom.ts';
+import { camposDeContenido as camposContenido, leerContenido } from './comunes.ts';
 
 /** Productos marcados, por lista; sobreviven a los redibujos. */
 const seleccion = new Map<string, Set<string>>();

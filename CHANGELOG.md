@@ -6,6 +6,13 @@ la versión nueva (ver scripts/nueva-version.mjs).
 
 ## Sin publicar
 
+- Comparar: cada oferta ocupa siempre dos líneas. Arriba, precio y
+  producto; abajo, la tienda, el precio por litro o kilo, "+N sitios" para
+  ver el mismo producto en otros sitios y "Ver en sitio ↗" si es online.
+- Tiendas manuales: los precios llevan contenido y unidad de medida
+  (1 + L), se pueden editar, y salen en el comparador para cualquier
+  producto de la lista cuyas palabras estén en el nombre ("Leche entera
+  de Toro" aparece al buscar "leche entera").
 - Comparar: el mismo producto en varios sitios se ve una sola vez, con el
   precio más bajo. Al tocarlo se despliegan los demás sitios y el que se
   toque pasa a ser el que se muestra.

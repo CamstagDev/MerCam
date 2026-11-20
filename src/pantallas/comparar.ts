@@ -8,15 +8,15 @@
 // mismo producto y precio) se muestran una vez con todas sus tiendas, y
 // cada una dice su precio por litro o por kilo si el título trae el tamaño.
 // El mismo producto en varios sitios se ve una sola vez, con el precio más
-// bajo; al tocarlo se despliegan los otros sitios, y el que se toque pasa
-// a ser el que se muestra.
+// bajo; "N sitios más" despliega los otros, y el que se toque pasa a ser el
+// que se muestra. Cada oferta ocupa siempre dos líneas.
 
 import type { Eleccion, Oferta, Producto, Tienda } from '../../compartido/tipos.ts';
 import { cambiar, guardarOfertasOnline, leer } from '../datos/almacen.ts';
 import { TEXTO_VEREDICTO, analizarOferta, anotarPrecio } from '../logica/historial.ts';
 import { buscar } from '../datos/servidor.ts';
 import { OFERTAS_VISIBLES, agruparIguales, agruparRepetidas, esDeLaMarca, ofertasVisibles, ordenarOfertas } from '../logica/comparar.ts';
-import { TEXTO_REFERENCIA, medidaDeContenido, medidaDeTitulo, precioDeReferencia } from '../logica/medidas.ts';
+import { TEXTO_REFERENCIA, medidaDeContenido, medidaDeTitulo, precioDeReferencia, textoContenido } from '../logica/medidas.ts';
 import type { Pantalla } from '../router.ts';
 import { boton, el, insignia, pesos, precio, vacio } from '../ui/dom.ts';
 
@@ -25,9 +25,15 @@ function claveOpcion(oferta: Oferta, tiendas: Tienda[]): string {
   return `${tiendas.map((t) => t.id).join(',') || oferta.tiendaId}|${oferta.precio}`;
 }
 
-/** "≈ $3.427/L · $3.427 por 1000 ml" según el tamaño del título y el contenido pedido. */
+/** La medida de una oferta: la que se cargó a mano o la que dice el título. */
+function medidaDe(oferta: Oferta) {
+  const unidad = leer().unidades.find((u) => u.id === oferta.contenidoUnidadId);
+  return medidaDeContenido(oferta.contenido, unidad) ?? medidaDeTitulo(oferta.titulo);
+}
+
+/** "≈ $3.427/L · $3.427 por 1000 ml" según el tamaño de la oferta y el contenido pedido. */
 function porMedida(oferta: Oferta, producto: Producto): string {
-  const medida = medidaDeTitulo(oferta.titulo);
+  const medida = medidaDe(oferta);
   if (!medida) return '';
   const partes = [`${pesos(precioDeReferencia(oferta.precio, medida))}/${TEXTO_REFERENCIA[medida.base]}`];
   const pedido = medidaDeContenido(producto.contenido, leer().unidades.find((u) => u.id === producto.contenidoUnidadId));
@@ -35,7 +41,13 @@ function porMedida(oferta: Oferta, producto: Producto): string {
     const unidad = leer().unidades.find((u) => u.id === producto.contenidoUnidadId)?.nombre ?? '';
     partes.push(`${pesos((oferta.precio / medida.cantidad) * pedido.cantidad)} por ${producto.contenido} ${unidad}`);
   }
-  return ` · ≈ ${partes.join(' · ')}`;
+  return `≈ ${partes.join(' · ')}`;
+}
+
+/** Título de la oferta con el contenido cargado a mano ("Leche entera de Toro · 1 L"). */
+function tituloDe(oferta: Oferta): string {
+  const tamano = textoContenido(oferta.contenido, leer().unidades.find((u) => u.id === oferta.contenidoUnidadId));
+  return tamano ? `${oferta.titulo} · ${tamano}` : oferta.titulo;
 }
 
 /** Insignias de una oferta: descuento que muestra la tienda y comparación con el historial. */
@@ -107,49 +119,70 @@ export const pantallaComparar: Pantalla = {
               grupo.opciones.find((o) => delGrupo(o) === mostradas.get(idGrupo)) ?? grupo.opciones.find(esLaElegida) ?? grupo.opciones[0]!;
             const { oferta, tiendas: suyas } = mostrada;
             const elegida = esLaElegida(mostrada);
-            const info = el(
-              'span',
-              {},
-              el('strong', {}, precio(oferta.precio, oferta.moneda)),
-              oferta.precioLista ? el('s', {}, ` ${precio(oferta.precioLista, oferta.moneda)}`) : null,
-              ` ${oferta.titulo}`,
-              el('small', {}, ` · ${suyas.map((t) => t.nombre).join(', ') || '?'}${porMedida(oferta, producto)}`),
-              ...insignias(oferta),
-            );
             const otras = grupo.opciones.filter((o) => o !== mostrada);
-            let cuerpo: HTMLElement = info;
-            if (otras.length) {
-              const sitios = otras.reduce((n, o) => n + Math.max(1, o.tiendas.length), 0);
-              const detalles = el(
-                'details',
-                { class: 'iguales' },
-                el('summary', {}, info, el('small', { class: 'mas-sitios' }, ` ▾ en ${sitios} ${sitios === 1 ? 'sitio más' : 'sitios más'}`)),
-                el(
-                  'div',
-                  { class: 'alternativas' },
-                  ...otras.map((o) =>
-                    el(
+            const abierto = abiertos.has(idGrupo) && otras.length > 0;
+            const sitios = otras.reduce((n, o) => n + Math.max(1, o.tiendas.length), 0);
+            const titulo = tituloDe(oferta);
+            // Siempre dos líneas: precio y producto arriba; dónde, precio por
+            // litro o kilo, los otros sitios y el enlace a la tienda abajo.
+            const cuerpo = el(
+              'div',
+              { class: 'oferta-cuerpo' },
+              el(
+                'div',
+                { class: 'oferta-linea' },
+                el('strong', {}, precio(oferta.precio, oferta.moneda)),
+                oferta.precioLista ? el('s', {}, precio(oferta.precioLista, oferta.moneda)) : null,
+                el('span', { class: 'oferta-titulo', title: titulo }, titulo),
+                ...insignias(oferta),
+              ),
+              el(
+                'div',
+                { class: 'oferta-linea oferta-detalle' },
+                el('span', { class: 'oferta-donde', title: suyas.map((t) => t.nombre).join(', ') }, suyas.map((t) => t.nombre).join(', ') || '?'),
+                porMedida(oferta, producto) ? el('span', { class: 'oferta-medida' }, `· ${porMedida(oferta, producto)}`) : null,
+                otras.length
+                  ? el(
                       'button',
                       {
                         type: 'button',
-                        class: 'alternativa',
-                        title: 'Mostrar esta en lugar de la de arriba',
+                        class: 'mas-sitios',
+                        'aria-expanded': String(abierto),
                         onclick: () => {
-                          mostradas.set(idGrupo, delGrupo(o));
-                          abiertos.delete(idGrupo);
+                          if (abierto) abiertos.delete(idGrupo);
+                          else abiertos.add(idGrupo);
                           dibujar();
                         },
                       },
-                      el('strong', {}, precio(o.oferta.precio, o.oferta.moneda)),
-                      el('small', {}, ` ${o.tiendas.map((t) => t.nombre).join(', ') || '?'}${o.oferta.precio !== oferta.precio ? ` · ${o.oferta.precio > oferta.precio ? '+' : '−'}${pesos(Math.abs(o.oferta.precio - oferta.precio))}` : ''}`),
+                      `${abierto ? '▴' : '▾'} +${sitios} ${sitios === 1 ? 'sitio' : 'sitios'}`,
+                    )
+                  : null,
+                oferta.url ? el('a', { href: oferta.url, target: '_blank', rel: 'noopener', class: 'ver-en-sitio' }, 'Ver en sitio ↗') : null,
+              ),
+              abierto
+                ? el(
+                    'div',
+                    { class: 'alternativas' },
+                    ...otras.map((o) =>
+                      el(
+                        'button',
+                        {
+                          type: 'button',
+                          class: 'alternativa',
+                          title: 'Mostrar esta en lugar de la de arriba',
+                          onclick: () => {
+                            mostradas.set(idGrupo, delGrupo(o));
+                            abiertos.delete(idGrupo);
+                            dibujar();
+                          },
+                        },
+                        el('strong', {}, precio(o.oferta.precio, o.oferta.moneda)),
+                        el('small', {}, ` ${o.tiendas.map((t) => t.nombre).join(', ') || '?'}${o.oferta.precio !== oferta.precio ? ` · ${o.oferta.precio > oferta.precio ? '+' : '−'}${pesos(Math.abs(o.oferta.precio - oferta.precio))}` : ''}`),
+                      ),
                     ),
-                  ),
-                ),
-              );
-              detalles.open = abiertos.has(idGrupo);
-              detalles.addEventListener('toggle', () => (detalles.open ? abiertos.add(idGrupo) : abiertos.delete(idGrupo)));
-              cuerpo = detalles;
-            }
+                  )
+                : null,
+            );
             bloque.append(
               el(
                 'div',

@@ -29,8 +29,31 @@ export function claveManual(nombreProducto: string): string {
   return `manual:${normalizar(nombreProducto)}`;
 }
 
+/** Palabras que no ayudan a reconocer un producto. */
+const PALABRAS_VACIAS = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'con', 'sin', 'y', 'en', 'x', 'por', 'para']);
+
+function palabras(texto: string): string[] {
+  return normalizar(texto)
+    .replace(/[^a-z0-9.,]+/g, ' ')
+    .split(' ')
+    .filter((p) => p && !PALABRAS_VACIAS.has(p));
+}
+
+/**
+ * Un precio manual sirve para un producto de la lista si su título trae
+ * todas las palabras del producto: "Leche entera de Toro 1 L" sirve para
+ * "Leche entera" y para "leche", pero no para "Leche deslactosada".
+ */
+export function coincideManual(titulo: string, nombreProducto: string): boolean {
+  const buscadas = palabras(nombreProducto);
+  if (!buscadas.length) return false;
+  const delTitulo = new Set(palabras(titulo));
+  return buscadas.every((p) => delTitulo.has(p));
+}
+
 export function esDelProducto(oferta: Oferta, producto: Producto): boolean {
-  return oferta.productoId === producto.id || oferta.productoId === claveManual(producto.nombre);
+  if (oferta.productoId === producto.id || oferta.productoId === claveManual(producto.nombre)) return true;
+  return oferta.origen === 'manual' && oferta.productoId.startsWith('manual:') && coincideManual(oferta.titulo, producto.nombre);
 }
 
 /**

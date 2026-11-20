@@ -2,7 +2,7 @@
 
 import type { Articulo } from '../../compartido/tipos.ts';
 import { leer, nuevoId, type Datos } from '../datos/almacen.ts';
-import { campo, el } from '../ui/dom.ts';
+import { campo, el, type Campo } from '../ui/dom.ts';
 
 type CamposArticulo = Pick<Articulo, 'nombre' | 'generico' | 'descripcion' | 'unidadId' | 'marcaId' | 'categoriaIds' | 'contenido' | 'contenidoUnidadId'>;
 
@@ -21,6 +21,20 @@ export function camposContenido(contenido?: number, unidadId?: string): HTMLElem
       opciones: [{ valor: '', texto: 'Unidad del contenido' }, ...unidades.map((u) => ({ valor: u.id, texto: u.nombre }))],
       valor: unidadId ?? '',
     }),
+  ];
+}
+
+/** Los mismos campos de contenido, para usarlos dentro de formulario(). */
+export function camposDeContenido(contenido?: number, unidadId?: string): Campo[] {
+  const unidades = leer().unidades.filter((u) => u.activo || u.id === unidadId);
+  return [
+    { nombre: 'contenido', etiqueta: 'Contenido (p. ej. 1000)', tipo: 'number', paso: 'any', valor: contenido ? String(contenido) : '' },
+    {
+      nombre: 'contenidoUnidadId',
+      etiqueta: 'Unidad de medida',
+      opciones: [{ valor: '', texto: 'Unidad de medida' }, ...unidades.map((u) => ({ valor: u.id, texto: u.nombre }))],
+      valor: unidadId ?? '',
+    },
   ];
 }
 
