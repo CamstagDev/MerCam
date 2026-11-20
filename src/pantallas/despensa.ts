@@ -52,7 +52,7 @@ export function filaArticulo(a: Articulo, seleccionable = true): HTMLElement {
       'a',
       { href: `#/articulo?id=${a.id}`, class: 'fila-articulo-info' },
       el('span', {}, a.nombre, e.enLista ? insignia('En lista', 'acento') : null),
-      el('small', {}, [unidad, marca, ...categorias].filter(Boolean).join(' · ')),
+      el('small', {}, [unidad, a.contenido ? `${cantidad(a.contenido)} ${datos.unidades.find((u) => u.id === a.contenidoUnidadId)?.nombre ?? ''}` : '', marca, ...categorias].filter(Boolean).join(' · ')),
     ),
     el(
       'span',

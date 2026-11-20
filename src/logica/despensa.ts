@@ -168,7 +168,9 @@ export function faltantesDePlan(datos: Pick<Datos, 'movimientos' | 'comidas'>, p
 /** Un producto de lista hecho a partir de un artículo (para buscarlo en los supermercados). */
 export function productoDeArticulo(datos: Pick<Datos, 'marcas'>, articulo: Articulo, cantidad: number, nuevoId: Id): Producto {
   const marca = datos.marcas.find((m) => m.id === articulo.marcaId)?.nombre;
-  return { id: nuevoId(), nombre: articulo.nombre, marca, cantidad, articuloId: articulo.id };
+  const producto: Producto = { id: nuevoId(), nombre: articulo.nombre, marca, cantidad, articuloId: articulo.id };
+  if (articulo.contenido && articulo.contenidoUnidadId) Object.assign(producto, { contenido: articulo.contenido, contenidoUnidadId: articulo.contenidoUnidadId });
+  return producto;
 }
 
 /**

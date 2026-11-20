@@ -6,6 +6,15 @@ la versión nueva (ver scripts/nueva-version.mjs).
 
 ## Sin publicar
 
+- Comparar: las ofertas repetidas (sedes de una cadena con la misma
+  tienda online, mismo producto y precio) se muestran una sola vez con
+  todas sus tiendas, y esas sedes se buscan una sola vez.
+- Comparar: cada oferta muestra su precio por litro o por kilo (leído del
+  título) y, si el producto tiene contenido, cuánto saldría ese tamaño.
+- Las tiendas que venden online llevan un punto verde en vez de "online".
+- Productos de listas y de la despensa con contenido y unidad de medida
+  (p. ej. 1000 ml). Las unidades de medida dicen a qué equivalen (L =
+  1000 ml, kg = 1000 g, Docena = 12).
 - Primera versión: listas de compras con marca opcional, sitios
   (direcciones) con los supermercados cercanos, tiendas manuales con
   precios a mano, comparación de precios (las 3 más baratas por producto,

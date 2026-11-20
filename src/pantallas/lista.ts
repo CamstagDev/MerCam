@@ -7,7 +7,22 @@ import type { Lista } from '../../compartido/tipos.ts';
 import { cambiar, leer, nuevoId } from '../datos/almacen.ts';
 import { agregarArticulosALista, estadoArticulo, marcarComprados } from '../logica/despensa.ts';
 import { navegar, redibujar, type Pantalla } from '../router.ts';
-import { boton, cantidad, casilla, el, formulario, insignia, pesos, plegable, vacio } from '../ui/dom.ts';
+import { boton, cantidad, casilla, el, formulario, insignia, pesos, plegable, vacio, type Campo } from '../ui/dom.ts';
+import { leerContenido } from './comunes.ts';
+
+/** Contenido y su unidad de medida (p. ej. 1000 + ml), para comparar precios por litro o kilo. */
+function camposContenido(contenido?: number, unidadId?: string): Campo[] {
+  const unidades = leer().unidades.filter((u) => u.activo || u.id === unidadId);
+  return [
+    { nombre: 'contenido', etiqueta: 'Contenido (p. ej. 1000)', tipo: 'number', paso: 'any', valor: contenido ? String(contenido) : '' },
+    {
+      nombre: 'contenidoUnidadId',
+      etiqueta: 'Unidad de medida',
+      opciones: [{ valor: '', texto: 'Unidad de medida' }, ...unidades.map((u) => ({ valor: u.id, texto: u.nombre }))],
+      valor: unidadId ?? '',
+    },
+  ];
+}
 
 /** Productos marcados, por lista; sobreviven a los redibujos. */
 const seleccion = new Map<string, Set<string>>();
@@ -76,6 +91,7 @@ export const pantallaLista: Pantalla = {
                     `${cantidad(p.cantidad)}${unidad ? ` ${unidad}` : ''} × `,
                     p.articuloId ? el('a', { href: `#/articulo?id=${p.articuloId}` }, p.nombre) : p.nombre,
                     p.marca ? el('small', {}, ` ${p.marca}`) : null,
+                    p.contenido ? el('small', {}, ` · ${cantidad(p.contenido)} ${datos.unidades.find((u) => u.id === p.contenidoUnidadId)?.nombre ?? ''}`) : null,
                     p.articuloId ? insignia('Despensa', '', `En casa: ${cantidad(stock ?? 0)}`) : null,
                   ),
                   el(
@@ -93,6 +109,7 @@ export const pantallaLista: Pantalla = {
                       [
                         { nombre: 'cantidad', etiqueta: 'Cantidad', tipo: 'number', paso: 'any', valor: String(p.cantidad), requerido: true },
                         { nombre: 'marca', etiqueta: 'Marca (opcional)', valor: p.marca ?? '' },
+                        ...camposContenido(p.contenido, p.contenidoUnidadId),
                         { nombre: 'precio', etiqueta: 'Precio estimado total (opcional)', tipo: 'number', valor: p.precioEstimado ? String(p.precioEstimado) : '' },
                       ],
                       'Guardar',
@@ -101,6 +118,7 @@ export const pantallaLista: Pantalla = {
                           x.cantidad = Number(v.cantidad) || x.cantidad;
                           x.marca = v.marca?.trim() || undefined;
                           x.precioEstimado = Number(v.precio) || undefined;
+                          Object.assign(x, leerContenido(v.contenido, v.contenidoUnidadId));
                         }),
                       { limpiar: false },
                     ),
@@ -156,13 +174,14 @@ export const pantallaLista: Pantalla = {
           { nombre: 'nombre', etiqueta: 'Producto (p. ej. Leche entera 1 L)', requerido: true },
           { nombre: 'marca', etiqueta: 'Marca (opcional)' },
           { nombre: 'cantidad', etiqueta: 'Cant.', tipo: 'number', paso: 'any' },
+          ...camposContenido(),
         ],
         'Agregar',
-        ({ nombre = '', marca = '', cantidad: cant = '' }) => {
+        ({ nombre = '', marca = '', cantidad: cant = '', contenido, contenidoUnidadId }) => {
           cambiar((d) => {
-            d.listas
-              .find((x) => x.id === lista.id)
-              ?.productos.push({ id: nuevoId(), nombre: nombre.trim(), marca: marca.trim() || undefined, cantidad: Number(cant) || 1 });
+            const producto = { id: nuevoId(), nombre: nombre.trim(), marca: marca.trim() || undefined, cantidad: Number(cant) || 1 };
+            const extra = leerContenido(contenido, contenidoUnidadId);
+            d.listas.find((x) => x.id === lista.id)?.productos.push(extra.contenido ? { ...producto, ...extra } : producto);
           });
           redibujar();
         },

@@ -86,6 +86,10 @@ export interface Producto {
   articuloId?: string;
   /** Precio total estimado, si el usuario lo anota (o viene del historial). */
   precioEstimado?: number;
+  /** Contenido de cada unidad (p. ej. 1000 con contenidoUnidadId de "ml"). */
+  contenido?: number;
+  /** Unidad de medida del contenido (catálogo de unidades). */
+  contenidoUnidadId?: string;
 }
 
 export interface Lista {
@@ -125,6 +129,13 @@ export interface ItemCatalogo {
   nombre: string;
   descripcion?: string;
   activo: boolean;
+  /**
+   * Solo unidades de medida: a qué magnitud corresponde y cuánto equivale
+   * en su unidad base (L -> ml × 1000, kg -> g × 1000, Docena -> und × 12).
+   * Con eso se comparan precios por litro o por kilo.
+   */
+  base?: 'ml' | 'g' | 'und';
+  factor?: number;
 }
 
 export interface Despensa {
@@ -145,6 +156,9 @@ export interface Articulo {
   unidadId: string;
   marcaId?: string;
   categoriaIds: string[];
+  /** Contenido de cada unidad (p. ej. 1000 con contenidoUnidadId de "ml"). */
+  contenido?: number;
+  contenidoUnidadId?: string;
   creado: string;
 }
 

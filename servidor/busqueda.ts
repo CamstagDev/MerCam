@@ -30,12 +30,27 @@ export async function buscarLista(pedido: PedidoBusqueda): Promise<RespuestaBusq
   const errores: RespuestaBusqueda['errores'] = [];
   const ahora = new Date().toISOString();
 
+  // Varias sedes de una cadena suelen compartir la misma tienda online
+  // (Carulla y Carulla Pance): se busca una vez y el resultado sirve para
+  // todas, en vez de repetir las mismas consultas.
+  const yaBuscadas = new Map<string, Oferta[] | string>();
+
   // Una tienda a la vez (sus productos en paralelo), para no saturar a nadie.
   for (const tienda of pedido.tiendas) {
     const online = tienda.online;
     const buscador = online ? buscadorPorId(online.adaptador) : undefined;
     if (!online || !buscador) {
       errores.push({ tiendaId: tienda.id, motivo: 'La tienda no tiene un buscador online' });
+      continue;
+    }
+    const clave = `${online.adaptador}|${online.url}|${online.sede ?? ''}`;
+    const previa = yaBuscadas.get(clave);
+    if (typeof previa === 'string') {
+      errores.push({ tiendaId: tienda.id, motivo: previa });
+      continue;
+    }
+    if (previa) {
+      ofertas.push(...previa.map((o) => ({ ...o, tiendaId: tienda.id })));
       continue;
     }
     try {
@@ -60,8 +75,11 @@ export async function buscarLista(pedido: PedidoBusqueda): Promise<RespuestaBusq
         }),
       );
       ofertas.push(...porProducto.flat());
+      yaBuscadas.set(clave, porProducto.flat());
     } catch (error) {
-      errores.push({ tiendaId: tienda.id, motivo: error instanceof Error ? error.message : String(error) });
+      const motivo = error instanceof Error ? error.message : String(error);
+      errores.push({ tiendaId: tienda.id, motivo });
+      yaBuscadas.set(clave, motivo);
     }
   }
   return { ofertas, errores };

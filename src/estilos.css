@@ -220,3 +220,15 @@ code { background: var(--surface-strong); padding: 1px 6px; border-radius: 6px; 
   .filas li { flex-wrap: wrap; }
   .movimiento-cabeza { flex-wrap: wrap; }
 }
+
+/* Bombillo verde: la tienda vende online. */
+.punto-online {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--positivo);
+  box-shadow: 0 0 6px 1px rgba(79, 209, 138, 0.8);
+  vertical-align: middle;
+}

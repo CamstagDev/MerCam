@@ -4,7 +4,32 @@ import type { Articulo } from '../../compartido/tipos.ts';
 import { leer, nuevoId, type Datos } from '../datos/almacen.ts';
 import { campo, el } from '../ui/dom.ts';
 
-type CamposArticulo = Pick<Articulo, 'nombre' | 'generico' | 'descripcion' | 'unidadId' | 'marcaId' | 'categoriaIds'>;
+type CamposArticulo = Pick<Articulo, 'nombre' | 'generico' | 'descripcion' | 'unidadId' | 'marcaId' | 'categoriaIds' | 'contenido' | 'contenidoUnidadId'>;
+
+/**
+ * Campos de "contenido" de un producto: cuánto trae cada unidad y en qué
+ * unidad de medida (1000 + ml, 1 + L, 500 + g). Sirve para comparar el
+ * precio por litro o por kilo entre tamaños distintos.
+ */
+export function camposContenido(contenido?: number, unidadId?: string): HTMLElement[] {
+  const unidades = leer().unidades.filter((u) => u.activo || u.id === unidadId);
+  return [
+    campo({ nombre: 'contenido', etiqueta: 'Contenido (p. ej. 1000)', tipo: 'number', paso: 'any', valor: contenido ? String(contenido) : '' }),
+    campo({
+      nombre: 'contenidoUnidadId',
+      etiqueta: 'Unidad del contenido',
+      opciones: [{ valor: '', texto: 'Unidad del contenido' }, ...unidades.map((u) => ({ valor: u.id, texto: u.nombre }))],
+      valor: unidadId ?? '',
+    }),
+  ];
+}
+
+/** Lee el contenido de un formulario: solo cuenta si hay cantidad y unidad. */
+export function leerContenido(contenido: unknown, unidadId: unknown): Pick<Articulo, 'contenido' | 'contenidoUnidadId'> {
+  const valor = Number(contenido);
+  const unidad = String(unidadId ?? '');
+  return valor > 0 && unidad ? { contenido: valor, contenidoUnidadId: unidad } : { contenido: undefined, contenidoUnidadId: undefined };
+}
 
 /**
  * Formulario de un artículo: nombre general (con autocompletado de los que
@@ -25,8 +50,8 @@ export function formularioArticulo(
   const unidades = activos(datos.unidades, articulo?.unidadId);
   const unidad = campo({
     nombre: 'unidadId',
-    etiqueta: 'Unidad',
-    opciones: unidades.map((u) => ({ valor: u.id, texto: u.nombre })),
+    etiqueta: 'Se cuenta por (Unidad, Paquete…)',
+    opciones: unidades.map((u) => ({ valor: u.id, texto: `Se cuenta por: ${u.nombre}` })),
     valor: articulo?.unidadId ?? unidades[0]?.id,
     requerido: true,
   });
@@ -64,6 +89,7 @@ export function formularioArticulo(
     generico,
     titulo,
     unidad,
+    ...camposContenido(articulo?.contenido, articulo?.contenidoUnidadId),
     marca,
     descripcion,
     categorias.length ? casillas : el('small', { class: 'ayuda' }, 'Sin categorías: créalas en "Marcas, unidades y categorías".'),
@@ -84,6 +110,7 @@ export function formularioArticulo(
       unidadId: texto('unidadId'),
       marcaId: texto('marcaId') || undefined,
       categoriaIds: valores.getAll('categoria').map(String),
+      ...leerContenido(valores.get('contenido'), valores.get('contenidoUnidadId')),
     });
   });
   return form;
