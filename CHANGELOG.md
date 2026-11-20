@@ -6,6 +6,9 @@ la versión nueva (ver scripts/nueva-version.mjs).
 
 ## Sin publicar
 
+- Lista: al editar un producto también se puede cambiar su nombre.
+- Las listas desplegables se ven con el tema oscuro (antes, en Windows,
+  las opciones salían en blanco y no se leían).
 - Comparar: los resultados se ordenan primero por qué tanto se parecen a
   lo buscado y después por precio. Al buscar "leche" sale primero "Leche
   entera Alpina" y no "Chocolatina de leche".
