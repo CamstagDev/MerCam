@@ -111,6 +111,9 @@ export interface Oferta {
   moneda: string;
   /** Página del producto en la tienda online (el usuario compra ahí). */
   url?: string;
+  /** Contenido de los precios manuales (1 + L), para el precio por litro o kilo. */
+  contenido?: number;
+  contenidoUnidadId?: string;
   origen: 'online' | 'manual';
   actualizada: string;
 }

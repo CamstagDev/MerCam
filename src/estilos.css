@@ -233,12 +233,25 @@ code { background: var(--surface-strong); padding: 1px 6px; border-radius: 6px; 
   vertical-align: middle;
 }
 
+/* Cada oferta en dos líneas: precio y producto; dónde, precio por medida y acciones. */
+.oferta-cuerpo { flex: 1; min-width: 0; }
+.oferta-linea { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; }
+.oferta-linea > * { flex: none; }
+.oferta-linea .oferta-titulo, .oferta-linea .oferta-donde, .oferta-linea .oferta-medida { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.oferta-linea .oferta-titulo { flex-grow: 1; }
+.oferta-detalle { gap: 5px; font-size: 0.82em; color: var(--text-muted); margin-top: 2px; }
+.mas-sitios, .ver-en-sitio {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: none;
+}
+.mas-sitios:hover, .ver-en-sitio:hover { text-decoration: underline; }
+
 /* Mismo producto en varios sitios: el más barato arriba y el resto plegado. */
-.oferta > details.iguales { flex: 1; min-width: 0; }
-.iguales > summary { cursor: pointer; list-style: none; }
-.iguales > summary::-webkit-details-marker { display: none; }
-.iguales .mas-sitios { color: var(--accent); white-space: nowrap; }
-.iguales[open] .mas-sitios { opacity: 0.6; }
 .alternativas { display: flex; flex-direction: column; gap: 4px; margin: 6px 0 2px 12px; }
 .alternativa {
   text-align: left;

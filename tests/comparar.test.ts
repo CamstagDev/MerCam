@@ -69,3 +69,21 @@ describe('armarMinilista', () => {
     ]);
   });
 });
+
+describe('precios manuales por palabras', () => {
+  const manual = (titulo: string) => oferta({ titulo, productoId: claveManual(titulo), origen: 'manual' });
+
+  it('un precio manual sirve si su título trae todas las palabras del producto', () => {
+    const ordenadas = ordenarOfertas(leche, [
+      manual('Leche entera de Toro 1 L'),
+      manual('LECHE ENTERA'),
+      manual('Leche deslactosada Toro 1 L'),
+      manual('Queso entero'),
+    ]);
+    expect(ordenadas.map((o) => o.titulo)).toEqual(['Leche entera de Toro 1 L', 'LECHE ENTERA']);
+  });
+
+  it('las ofertas online siguen siendo solo de su producto', () => {
+    expect(ordenarOfertas(leche, [oferta({ titulo: 'Leche entera', productoId: 'otro' })])).toEqual([]);
+  });
+});
