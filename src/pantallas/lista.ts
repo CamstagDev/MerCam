@@ -93,6 +93,7 @@ export const pantallaLista: Pantalla = {
                     'Editar',
                     formulario(
                       [
+                        { nombre: 'nombre', etiqueta: 'Producto', valor: p.nombre, requerido: true },
                         { nombre: 'cantidad', etiqueta: 'Cantidad', tipo: 'number', paso: 'any', valor: String(p.cantidad), requerido: true },
                         { nombre: 'marca', etiqueta: 'Marca (opcional)', valor: p.marca ?? '' },
                         ...camposContenido(p.contenido, p.contenidoUnidadId),
@@ -101,6 +102,7 @@ export const pantallaLista: Pantalla = {
                       'Guardar',
                       (v) =>
                         cambiarProducto(p.id, (x) => {
+                          x.nombre = v.nombre?.trim() || x.nombre;
                           x.cantidad = Number(v.cantidad) || x.cantidad;
                           x.marca = v.marca?.trim() || undefined;
                           x.precioEstimado = Number(v.precio) || undefined;
