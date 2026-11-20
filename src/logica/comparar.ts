@@ -117,3 +117,40 @@ export function agruparRepetidas(ofertas: Oferta[], tiendas: Tienda[]): OfertaAg
   }
   return [...grupos.values()];
 }
+
+/** El mismo producto en varios sitios: se muestra el más barato y los demás quedan plegados. */
+export interface GrupoIgual {
+  clave: string;
+  /** De la más barata a la más cara (en el orden de entrada). */
+  opciones: OfertaAgrupada[];
+}
+
+/**
+ * Clave de "producto igual": el título sin tildes, signos ni mayúsculas y
+ * con las palabras ordenadas, para que "Leche Alpina 1100 ml" y
+ * "LECHE ALPINA (1100 ML)" cuenten como el mismo.
+ */
+export function claveDeProducto(titulo: string): string {
+  return normalizar(titulo)
+    .replace(/[^a-z0-9.,]+/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .sort()
+    .join(' ');
+}
+
+/**
+ * Agrupa las ofertas del mismo producto en distintos sitios. Los grupos
+ * salen en el orden de su primera oferta (la más barata, o la de la marca
+ * pedida), y dentro de cada grupo se respeta el orden de entrada.
+ */
+export function agruparIguales(ofertas: OfertaAgrupada[]): GrupoIgual[] {
+  const grupos = new Map<string, GrupoIgual>();
+  for (const opcion of ofertas) {
+    const clave = claveDeProducto(opcion.oferta.titulo);
+    const grupo = grupos.get(clave);
+    if (grupo) grupo.opciones.push(opcion);
+    else grupos.set(clave, { clave, opciones: [opcion] });
+  }
+  return [...grupos.values()];
+}

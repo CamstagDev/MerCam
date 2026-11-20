@@ -6,6 +6,9 @@ la versión nueva (ver scripts/nueva-version.mjs).
 
 ## Sin publicar
 
+- Comparar: el mismo producto en varios sitios se ve una sola vez, con el
+  precio más bajo. Al tocarlo se despliegan los demás sitios y el que se
+  toque pasa a ser el que se muestra.
 - Comparar: las ofertas repetidas (sedes de una cadena con la misma
   tienda online, mismo producto y precio) se muestran una sola vez con
   todas sus tiendas, y esas sedes se buscan una sola vez.
